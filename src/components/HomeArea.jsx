@@ -181,17 +181,28 @@ export default function HomeArea({ stats, inventory, setInventory, equippedItems
   return (
     <div className="p-4 flex flex-col items-center h-full space-y-6 animate-in fade-in zoom-in duration-300 relative">
       
-      {/* Pet & Level Header */}
-      <div className="flex flex-col items-center mt-8 shrink-0">
+      {/* Dynamic Avatar & Pet Header */}
+      <div className="flex items-center justify-center gap-6 mt-8 shrink-0">
+        
+        {/* Player Avatar */}
+        <div className="relative w-32 h-32">
+          <div className="absolute inset-0 bg-game-primary/20 rounded-full blur-xl animate-pulse"></div>
+          <div className="relative bg-gradient-to-b from-game-surface to-[#111827] w-full h-full rounded-full border-4 border-game-primary shadow-neon flex items-center justify-center overflow-hidden">
+            <User size={70} className="text-game-primary" />
+          </div>
+          <div className="absolute -bottom-4 left-1/2 transform -translate-x-1/2 bg-game-bg border border-game-primary px-4 py-1 rounded-full text-xs font-bold text-game-primary shadow-neon whitespace-nowrap flex items-center gap-1">
+            <ChevronUp size={14} /> Lv. {currentLevel} 生徒
+          </div>
+        </div>
         
         {/* Pet Avatar */}
-        <div className="relative w-24 h-24 flex flex-col items-center">
+        <div className="relative w-20 h-20 mt-4 flex flex-col items-center">
           <div className={`absolute inset-0 rounded-full blur-md ${activePassives.length > 0 ? 'bg-game-accent/30 animate-pulse' : 'bg-game-surface/50'}`}></div>
           <div className={`relative w-full h-full rounded-full border-2 flex items-center justify-center bg-[#111827] z-10 
             ${activePet ? getRarityStyle(activePet.rarity).split(' ')[0] : 'border-game-surface'}
             ${activePassives.length > 0 ? 'text-game-accent shadow-[0_0_10px_rgba(251,191,36,0.6)]' : 'text-gray-500'}`}>
             
-            {activePet ? renderIcon(activePet.iconName, 'w-12 h-12') : <Dog size={48} />}
+            {activePet ? renderIcon(activePet.iconName, 'w-10 h-10') : <Dog size={40} />}
           </div>
           {activePet && (
              <span className="text-[9px] font-bold text-game-primary mt-1 absolute -bottom-5 whitespace-nowrap">
@@ -203,11 +214,6 @@ export default function HomeArea({ stats, inventory, setInventory, equippedItems
               <Sparkles size={12} />
             </div>
           )}
-        </div>
-        
-        {/* Level Badge */}
-        <div className="mt-6 bg-game-bg border border-game-primary px-5 py-1.5 rounded-full text-sm font-bold text-game-primary shadow-neon whitespace-nowrap flex items-center gap-1">
-          <ChevronUp size={14} /> Lv. {currentLevel} 生徒
         </div>
       </div>
 

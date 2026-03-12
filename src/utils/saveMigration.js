@@ -6,7 +6,7 @@
  * filled with default values without overwriting existing data.
  */
 
-const CURRENT_SAVE_VERSION = 1;
+const CURRENT_SAVE_VERSION = 2;
 const SAVE_VERSION_KEY = 'gemini_survivor_save_version';
 
 // All localStorage keys used by the game
@@ -71,8 +71,13 @@ const migrations = {
     localStorage.removeItem('gemini_survivor_notices');
     console.log('[SaveMigration] v0->v1: Cleared all dev data for initial release.');
   },
-  // Future migrations go here (use safeMerge to preserve user data):
-  // 1: () => { ... },
+  // v1 -> v2: Forced reset for production release
+  1: () => {
+    for (const key of GAME_KEYS) {
+      localStorage.removeItem(key);
+    }
+    console.log('[SaveMigration] v1->v2: Forced production reset complete.');
+  },
 };
 
 /**

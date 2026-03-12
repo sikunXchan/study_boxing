@@ -62,24 +62,17 @@ function safeMerge(existing, defaults) {
  * IMPORTANT: Never delete existing fields. Only ADD new ones.
  */
 const migrations = {
-  // Example: version 0 -> 1 (initial setup, fills in any missing fields)
+  // v0 -> v1: Initial public release - full reset of any dev/test data
   0: () => {
     for (const key of GAME_KEYS) {
-      try {
-        const raw = localStorage.getItem(key);
-        if (raw !== null && DEFAULTS[key] && typeof DEFAULTS[key] === 'object' && !Array.isArray(DEFAULTS[key])) {
-          const parsed = JSON.parse(raw);
-          const merged = safeMerge(parsed, DEFAULTS[key]);
-          localStorage.setItem(key, JSON.stringify(merged));
-        }
-      } catch (e) {
-        console.warn(`Migration: Could not process key "${key}":`, e);
-        // Never delete data on error
-      }
+      localStorage.removeItem(key);
     }
+    // Also remove legacy keys
+    localStorage.removeItem('gemini_survivor_notices');
+    console.log('[SaveMigration] v0->v1: Cleared all dev data for initial release.');
   },
-  // Future migrations go here:
-  // 1: () => { ... migrate from v1 to v2 ... },
+  // Future migrations go here (use safeMerge to preserve user data):
+  // 1: () => { ... },
 };
 
 /**

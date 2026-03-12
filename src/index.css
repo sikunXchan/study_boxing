@@ -1,0 +1,82 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-game-bg text-game-text font-sans antialiased overflow-hidden;
+  }
+}
+
+@layer utilities {
+  .glass-panel {
+    @apply bg-game-surface/80 backdrop-blur-md border border-game-surface/50 shadow-xl rounded-xl;
+  }
+  
+  .glass-btn {
+    @apply bg-game-surface/60 backdrop-blur-sm border border-game-primary/30 rounded-lg hover:bg-game-primary/20 transition-all duration-200 active:scale-95 flex items-center justify-center;
+  }
+
+  .text-shadow-neon {
+    text-shadow: 0 0 5px rgba(16, 185, 129, 0.8), 0 0 10px rgba(16, 185, 129, 0.5);
+  }
+}
+
+@keyframes flash-legendary {
+  0%, 100% { background-color: rgba(251, 191, 36, 0); }
+  10%, 90% { background-color: rgba(251, 191, 36, 0.9); }
+  50% { background-color: white; }
+}
+
+@keyframes flash-epic {
+  0%, 100% { background-color: rgba(139, 92, 246, 0); }
+  10%, 90% { background-color: rgba(139, 92, 246, 0.9); }
+  50% { background-color: white; }
+}
+
+@keyframes flash-rare {
+  0%, 100% { background-color: rgba(59, 130, 246, 0); }
+  10%, 90% { background-color: rgba(59, 130, 246, 0.9); }
+  50% { background-color: white; }
+}
+
+@keyframes heavy-shake {
+  0% { transform: translate(1px, 1px) rotate(0deg); }
+  10% { transform: translate(-1px, -2px) rotate(-1deg); }
+  20% { transform: translate(-3px, 0px) rotate(1deg); }
+  30% { transform: translate(3px, 2px) rotate(0deg); }
+  40% { transform: translate(1px, -1px) rotate(1deg); }
+  50% { transform: translate(-1px, 2px) rotate(-1deg); }
+  60% { transform: translate(-3px, 1px) rotate(0deg); }
+  70% { transform: translate(3px, 1px) rotate(-1deg); }
+  80% { transform: translate(-1px, -1px) rotate(1deg); }
+  90% { transform: translate(1px, 2px) rotate(0deg); }
+  100% { transform: translate(1px, -2px) rotate(-1deg); }
+}
+
+.animate-pull-legendary {
+  animation: flash-legendary 1.5s ease-in-out, heavy-shake 0.2s cubic-bezier(.36,.07,.19,.97) both infinite;
+}
+
+.animate-pull-epic {
+  animation: flash-epic 1.5s ease-in-out, heavy-shake 0.3s cubic-bezier(.36,.07,.19,.97) both infinite;
+}
+
+.animate-pull-rare {
+  animation: flash-rare 1.2s ease-in-out;
+}
+
+/* Custom Scrollbar for immersive feel */
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #374151;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #4b5563;
+}

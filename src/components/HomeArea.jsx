@@ -53,11 +53,11 @@ export default function HomeArea({ stats, inventory, setInventory, equippedItems
   const getAuraClass = (item) => {
     if (!item) return '';
     const isAwakened = (item.awakened || 0) > 0;
-    const isMax = (item.upgradeLevel || 0) >= 4;
-    const isGod = item.rarity === 'god';
+    
+    // Only awakened items emit an aura (even God rarity)
+    if (!isAwakened) return '';
 
-    if (isGod) return 'aura-god';
-    if (!isAwakened && !isMax) return '';
+    if (item.rarity === 'god') return 'aura-god';
 
     switch (item.rarity) {
       case 'legendary': return 'aura-legendary';
@@ -329,7 +329,7 @@ export default function HomeArea({ stats, inventory, setInventory, equippedItems
                      <div className={`absolute -bottom-2 -right-2 bg-[#111827] border border-current text-[9px] font-bold px-1.5 py-0.5 rounded shadow-md truncate max-w-[50px]
                        ${(item.awakened || 0) > 0 ? 'text-game-accent animate-pulse shadow-[0_0_8px_rgba(251,191,36,0.6)]' : ''}
                      `}>
-                       {(item.awakened || 0) > 0 ? `覚醒 Lv.${item.awakened}` : (item.upgradeLevel >= 4 && item.type !== 'pet_entity') ? 'MAX' : `Lv.${(item.upgradeLevel || 0) + 1}`}
+                       {(item.awakened || 0) > 0 ? `覚醒 Lv.${item.awakened}` : (item.upgradeLevel >= 4) ? 'MAX' : `Lv.${(item.upgradeLevel || 0) + 1}`}
                      </div>
                   )}
                   {/* Aura if God or Awakened or MAX */}
@@ -361,11 +361,7 @@ export default function HomeArea({ stats, inventory, setInventory, equippedItems
                 const isMaxLevel = (item.upgradeLevel || 0) >= 4;
                 const duplicates = inventory.filter(i => {
                   if (i.id === item.id) return false;
-                  if (i.label !== item.label || i.rarity !== item.rarity) return false;
-                  if (!isMaxLevel) {
-                    return (i.upgradeLevel || 0) === (item.upgradeLevel || 0);
-                  }
-                  return true;
+                  return i.label === item.label && i.rarity === item.rarity;
                 });
                 
                 // v10 Rules:
@@ -421,16 +417,15 @@ export default function HomeArea({ stats, inventory, setInventory, equippedItems
                   } else {
                     setInventory(prev => prev.map(i => {
                       if (i.id === item.id) {
-                        return { ...i, upgradeLevel: (i.upgradeLevel || 0) + 1 };
+                        const addedLevels = (consumeItem.upgradeLevel || 0) + 1;
+                        return { ...i, upgradeLevel: (i.upgradeLevel || 0) + addedLevels };
                       }
                       return i;
                     }).filter(i => i.id !== consumeItem.id));
                   }
                 };
                 
-                const awakeDisplay = (item.awakened || 0) > 0 ? `[覚醒 Lv.${item.awakened}]` : '';
-                const baseLevelText = isMaxLevel ? 'MAX' : `Lv.${(item.upgradeLevel || 0) + 1}`;
-                const displayName = `${item.label} ${baseLevelText} ${awakeDisplay}`.trim();
+                const displayName = item.label;
 
                 const upgradeMult = Math.pow(isGear ? 1.5 : 1.1, item.upgradeLevel || 0);
                 const awakeMult = 1.0 + ((item.awakened || 0) * (isGear ? 0.2 : 0.1));
@@ -448,9 +443,14 @@ export default function HomeArea({ stats, inventory, setInventory, equippedItems
                     {(item.awakened || 0) > 0 && <div className="absolute inset-0 bg-gradient-to-r from-game-accent/10 to-transparent pointer-events-none animate-pulse"></div>}
                     {isMaxLevel && !isEquipped && <div className="absolute inset-0 bg-gradient-to-r from-game-accent/5 to-transparent pointer-events-none"></div>}
 
-                    <div className={`w-14 h-14 rounded-lg flex items-center justify-center shrink-0 border relative ${getRarityStyle(item.rarity)}`}>
+                     <div className={`w-14 h-14 rounded-lg flex items-center justify-center shrink-0 border relative ${getRarityStyle(item.rarity)}`}>
                        {renderIcon(item.iconName, getIconAccentColor(item.rarity))}
-                       {isMaxLevel && (item.awakened || 0) === 0 && item.rarity !== 'god' && <div className="absolute -top-2 -right-2 bg-red-500 text-white text-[8px] px-1 font-bold rounded shadow-[0_0_5px_rgba(239,68,68,0.5)]">MAX</div>}
+                       {/* Level Badge in Bottom-Right */}
+                       <div className={`absolute -bottom-1 -right-1 bg-[#111827] border border-current text-[8px] font-bold px-1 py-0.5 rounded shadow-md truncate max-w-[45px]
+                         ${(item.awakened || 0) > 0 ? 'text-game-accent animate-pulse shadow-[0_0_8px_rgba(251,191,36,0.6)]' : ''}
+                       `}>
+                         {(item.awakened || 0) > 0 ? `覚醒 Lv.${item.awakened}` : (item.upgradeLevel >= 4) ? 'MAX' : `Lv.${(item.upgradeLevel || 0) + 1}`}
+                       </div>
                        {item && <div className={`aura-base !rounded-lg ${getAuraClass(item)}`}></div>}
                     </div>
                     

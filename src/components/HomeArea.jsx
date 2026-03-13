@@ -157,7 +157,7 @@ export default function HomeArea({ stats, inventory, setInventory, equippedItems
   const baseExp = stats.atk + stats.hp;
   const { currentLevel, currentExpInLevel, expRequiredForNext, progressPercentage } = useMemo(() => calculateLevelData(baseExp), [baseExp]);
   
-  const multiplier = Math.pow(1.2, currentLevel - 1);
+  const multiplier = useMemo(() => calculateMultiplier(currentLevel), [currentLevel]);
   const finalATK = Math.floor((stats.atk + bonusATK) * multiplier);
   const finalHP = Math.floor((stats.hp + bonusHP) * multiplier);
 

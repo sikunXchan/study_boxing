@@ -24,3 +24,12 @@ export function calculateLevelData(totalExp) {
     progressPercentage
   };
 }
+
+/**
+ * V10: New Multiplier Logic
+ * Capped at 100x. Reaches ~100x at Level 80.
+ * Formula: min(100, 1.06 ^ (level - 1))
+ */
+export function calculateMultiplier(level) {
+  return Math.min(100, Math.pow(1.06, level - 1));
+}

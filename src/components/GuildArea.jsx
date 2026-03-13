@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Target, CheckCircle2, Plus, Bell, X, Flag, ChevronRight } from 'lucide-react';
+import { useState, useRef, useEffect } from 'react';
+import { Target, CheckCircle2, Plus, Bell, X, Flag, ChevronRight, Trash2, Gem as GemIcon } from 'lucide-react';
 import * as LucideIcons from 'lucide-react';
 import { useLocalStorage } from '../hooks/useLocalStorage';
 
@@ -16,6 +16,13 @@ export default function GuildArea({ setStats, setResources, inventory, setInvent
   // Pet Drop Modal states
   const [isPetPulling, setIsPetPulling] = useState(null);
   const [petResult, setPetResult] = useState(null);
+
+  // Gem Bonus Animation state
+  const [gemNotification, setGemNotification] = useState(null);
+  
+  // Swipe to delete state
+  const [swipedQuestId, setSwipedQuestId] = useState(null);
+  const touchStartX = useRef(0);
   
   const getRarityStyle = (rarity) => {
     switch (rarity) {
@@ -111,7 +118,8 @@ export default function GuildArea({ setStats, setResources, inventory, setInvent
       let bonusGems = 0;
       if (Math.random() < dropRate) {
         bonusGems = 20;
-        alert('🎉 ボーナスドロップ！ジェム +20 個を獲得しました！');
+        setGemNotification({ id: Date.now(), amount: 20 });
+        setTimeout(() => setGemNotification(null), 3000);
       }
 
       setResources(prev => ({ 
@@ -156,6 +164,25 @@ export default function GuildArea({ setStats, setResources, inventory, setInvent
       }
     } else {
       setActiveQuestIds([...activeQuestIds, quest.id]);
+    }
+  };
+
+  const handleDeleteQuest = (questId) => {
+    setCustomQuests(customQuests.filter(q => q.id !== questId));
+    setSwipedQuestId(null);
+  };
+
+  const handleTouchStart = (e) => {
+    touchStartX.current = e.touches[0].clientX;
+  };
+
+  const handleTouchEnd = (e, questId) => {
+    const touchEndX = e.changedTouches[0].clientX;
+    const diff = touchStartX.current - touchEndX;
+    if (diff > 50) {
+      setSwipedQuestId(questId);
+    } else if (diff < -50) {
+      setSwipedQuestId(null);
     }
   };
 
@@ -272,43 +299,62 @@ export default function GuildArea({ setStats, setResources, inventory, setInvent
               const petChanceText = isPetHuntMode ? '20%' : '5%';
               
               return (
-                <div key={quest.id} className={`glass-panel p-4 relative overflow-hidden transition-all duration-300 ${isActive ? 'border-game-accent/50 shadow-[0_0_15px_rgba(251,191,36,0.15)] bg-game-surface' : ''}`}>
-                  {isActive && <div className="absolute left-0 top-0 bottom-0 w-1 bg-game-accent shadow-[0_0_10px_rgba(251,191,36,0.8)]"></div>}
+                <div key={quest.id} className="relative overflow-hidden rounded-xl">
+                  {/* Delete Button (Behind) */}
+                  <div className="absolute inset-y-0 right-0 w-20 flex items-center justify-center bg-red-600 text-white">
+                    <button 
+                      onClick={() => handleDeleteQuest(quest.id)}
+                      className="w-full h-full flex flex-col items-center justify-center gap-1 active:bg-red-700 transition-colors"
+                    >
+                      <Trash2 size={24} />
+                      <span className="text-[10px] font-bold">削除</span>
+                    </button>
+                  </div>
 
-                  <div className="flex items-start justify-between">
-                    <div className="w-full">
-                      <h3 className={`font-bold text-sm mb-1 ${isActive ? 'text-white' : 'text-gray-300'}`}>{quest.title}</h3>
-                      <div className="mt-2 bg-[#111827] border border-game-surface rounded-md p-2">
-                        <span className="text-[10px] text-game-muted block mb-1">■ 獲得予定</span>
-                        <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-                          <span className={`text-[11px] font-bold ${quest.type === 'atk' ? 'text-red-400' : 'text-game-primary'}`}>
-                            EXP +{finalExp} <span className="text-[9px] text-gray-500">({quest.type === 'atk' ? 'ATK' : 'HP'}成長 / {breakdownStr})</span>
-                          </span>
-                          <span className="text-[11px] text-gray-500">/</span>
-                          <span className="text-[11px] text-[#fbbf24] font-bold">💰 {quest.rewardCoins} コイン</span>
-                          <span className="text-[11px] text-gray-500">/</span>
-                          <span className="text-[11px] text-game-accent">💎 {currentDropRateText}でジェム</span>
-                          {isPetHuntMode && (
-                             <>
-                               <span className="text-[11px] text-gray-500">/</span>
-                               <span className="text-[11px] text-game-accent font-bold animate-pulse">🐾 ペット確率 {petChanceText}</span>
-                             </>
-                          )}
+                  <div 
+                    onTouchStart={handleTouchStart}
+                    onTouchEnd={(e) => handleTouchEnd(e, quest.id)}
+                    style={{ transform: swipedQuestId === quest.id ? 'translateX(-80px)' : 'translateX(0)' }}
+                    className={`glass-panel p-4 relative overflow-hidden transition-transform duration-300 z-10 ${isActive ? 'border-game-accent/50 shadow-[0_0_15px_rgba(251,191,36,0.15)] bg-game-surface' : ''}`}
+                  >
+                    {isActive && <div className="absolute left-0 top-0 bottom-0 w-1 bg-game-accent shadow-[0_0_10px_rgba(251,191,36,0.8)]"></div>}
+
+                    <div className="flex items-start justify-between">
+                      <div className="w-full">
+                        <h3 className={`font-bold text-sm mb-1 ${isActive ? 'text-white' : 'text-gray-300'}`}>{quest.title}</h3>
+                        <div className="mt-2 bg-[#111827] border border-game-surface rounded-md p-2">
+                          {/* ... reward content ... */}
+                          <span className="text-[10px] text-game-muted block mb-1">■ 獲得予定</span>
+                          <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                            <span className={`text-[11px] font-bold ${quest.type === 'atk' ? 'text-red-400' : 'text-game-primary'}`}>
+                              EXP +{finalExp} <span className="text-[9px] text-gray-500">({quest.type === 'atk' ? 'ATK' : 'HP'}成長 / {breakdownStr})</span>
+                            </span>
+                            <span className="text-[11px] text-gray-500">/</span>
+                            <span className="text-[11px] text-[#fbbf24] font-bold">💰 {quest.rewardCoins} コイン</span>
+                            <span className="text-[11px] text-gray-500">/</span>
+                            <span className="text-[11px] text-game-accent">💎 {currentDropRateText}でジェム</span>
+                            {isPetHuntMode && (
+                               <>
+                                 <span className="text-[11px] text-gray-500">/</span>
+                                 <span className="text-[11px] text-game-accent font-bold animate-pulse">🐾 ペット確率 {petChanceText}</span>
+                               </>
+                            )}
+                          </div>
                         </div>
                       </div>
                     </div>
-                  </div>
 
-                  <button 
-                    onClick={() => handleQuestAction(quest)}
-                    className={`w-full mt-4 py-2.5 rounded-lg font-bold text-sm tracking-widest transition-all duration-300 active:scale-[0.98] flex justify-center items-center gap-2
-                      ${isActive 
-                        ? 'bg-game-primary/20 text-game-primary border border-game-primary hover:bg-game-primary/30 shadow-[0_0_10px_rgba(16,185,129,0.3)]' 
-                        : 'bg-game-surface border border-game-surface/50 text-white hover:bg-game-surface/80'
-                      }`}
-                  >
-                    {isActive ? <><CheckCircle2 size={16} /> 討伐完了 (報酬GET)</> : 'クエストを受注'}
-                  </button>
+                    <button 
+                      onClick={() => handleQuestAction(quest)}
+                      className={`w-full mt-4 py-2.5 rounded-lg font-bold text-sm tracking-widest transition-all duration-300 active:scale-[0.98] flex justify-center items-center gap-2
+                        ${isActive 
+                          ? 'bg-game-primary/20 text-game-primary border border-game-primary hover:bg-game-primary/30 shadow-[0_0_10px_rgba(16,185,129,0.3)]' 
+                          : 'bg-game-surface border border-game-surface/50 text-white hover:bg-game-surface/80'
+                        }`}
+                    >
+                      {isActive ? <><CheckCircle2 size={16} /> 討伐完了 (報酬GET)</> : 'クエストを受注'}
+                    </button>
+                  </div>
                 </div>
               );
             })}
@@ -316,6 +362,21 @@ export default function GuildArea({ setStats, setResources, inventory, setInvent
 
       </div>
       
+      {/* Gem Bonus Notification Toast */}
+      {gemNotification && (
+        <div className="fixed top-24 left-1/2 transform -translate-x-1/2 z-[200] animate-in slide-in-from-top-4 duration-500">
+          <div className="bg-game-surface border-2 border-game-accent px-6 py-3 rounded-full shadow-neon flex items-center gap-3">
+            <div className="bg-game-accent text-black p-1.5 rounded-full animate-bounce">
+              <GemIcon size={20} />
+            </div>
+            <div className="flex flex-col">
+              <span className="text-game-accent font-black text-sm tracking-wider">BONUS DROP!</span>
+              <span className="text-white font-bold text-xs">ジェム +{gemNotification.amount} 獲得</span>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Pet Catch Flash FX Overlay */}
       {isPetPulling && (
         <div className={`fixed inset-0 z-[100] animate-pull-${isPetPulling} pointer-events-none`}>

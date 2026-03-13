@@ -5,6 +5,7 @@ import { calculateLevelData, calculateMultiplier } from '../utils/level';
 
 export default function HomeArea({ stats, inventory, setInventory, equippedItems, setEquippedItems }) {
   const [selectedSlot, setSelectedSlot] = useState(null);
+  const [showEvolutionAnim, setShowEvolutionAnim] = useState(false);
 
   // Configuration for the 8 equipment slots (6 Player + 2 Pet)
   const slotsConfig = [
@@ -21,6 +22,7 @@ export default function HomeArea({ stats, inventory, setInventory, equippedItems
 
   const getRarityStyle = (rarity) => {
     switch (rarity) {
+      case 'god': return 'border-game-accent shadow-[0_0_20px_rgba(255,255,255,0.8)] text-white bg-transparent animate-rainbow bg-gradient-to-r from-red-500 via-yellow-500 via-green-500 via-blue-500 to-purple-500 bg-clip-border';
       case 'legendary': return 'border-game-accent shadow-[0_0_15px_rgba(251,191,36,0.6)] text-game-accent bg-[#fbbf24]/10';
       case 'epic': return 'border-game-secondary shadow-[0_0_15px_rgba(139,92,246,0.5)] text-game-secondary bg-game-secondary/10';
       case 'rare': return 'border-blue-500 shadow-[0_0_10px_rgba(59,130,246,0.4)] text-blue-400 bg-blue-500/10';
@@ -30,13 +32,39 @@ export default function HomeArea({ stats, inventory, setInventory, equippedItems
     }
   };
 
+  const getNextRarity = (rarity) => {
+    const order = ['normal', 'uncommon', 'rare', 'epic', 'legendary', 'god'];
+    const idx = order.indexOf(rarity);
+    if (idx !== -1 && idx < order.length - 1) return order[idx + 1];
+    return rarity;
+  };
+
   const getIconAccentColor = (rarity) => {
     switch(rarity) {
+      case 'god': return 'animate-god-glow';
       case 'legendary': return 'drop-shadow-[0_0_12px_rgba(251,191,36,0.9)] text-[#fbbf24]';
       case 'epic': return 'drop-shadow-[0_0_12px_rgba(139,92,246,0.9)] text-[#a78bfa]';
       case 'rare': return 'drop-shadow-[0_0_12px_rgba(59,130,246,0.9)] text-[#60a5fa]';
       case 'uncommon': return 'drop-shadow-[0_0_12px_rgba(16,185,129,0.9)] text-[#34d399]';
       default: return 'drop-shadow-md text-gray-300';
+    }
+  };
+
+  const getAuraClass = (item) => {
+    if (!item) return '';
+    const isAwakened = (item.awakened || 0) > 0;
+    const isMax = (item.upgradeLevel || 0) >= 4;
+    const isGod = item.rarity === 'god';
+
+    if (isGod) return 'aura-god';
+    if (!isAwakened && !isMax) return '';
+
+    switch (item.rarity) {
+      case 'legendary': return 'aura-legendary';
+      case 'epic': return 'aura-epic';
+      case 'rare': return 'aura-rare';
+      case 'uncommon': return 'aura-uncommon';
+      default: return '';
     }
   };
 
@@ -108,7 +136,11 @@ export default function HomeArea({ stats, inventory, setInventory, equippedItems
 
     inventory.forEach(item => {
       // If item is Max Level (+4) or Awakened, and NOT equipped, grant its stats passively!
-      if ((item.upgradeLevel || 0) >= 4 && !equippedItemIds.has(item.id) && item.type !== 'pet_entity') {
+      // For pets, only God rarity can have a collection bonus (Awakened)
+      const isGearCollection = item.type !== 'pet_entity' && ((item.upgradeLevel || 0) >= 4 || (item.awakened || 0) > 0);
+      const isPetCollection = item.type === 'pet_entity' && item.rarity === 'god' && (item.awakened || 0) > 0;
+
+      if ((isGearCollection || isPetCollection) && !equippedItemIds.has(item.id)) {
          // Apply Awakening Math if applicable
          const awakeMult = 1.0 + ((item.awakened || 0) * 0.1);
          passiveBonusATK += Math.floor((item.bonusATK || 0) * awakeMult);
@@ -120,8 +152,8 @@ export default function HomeArea({ stats, inventory, setInventory, equippedItems
     equippedItemIds.forEach(itemId => {
       const item = inventory.find(i => i.id === itemId);
       if (item) {
-        // Pets don't awaken (they scale infinitely on upgrade), so awakeMult is 1 for pets
-        const awakeMult = item.type !== 'pet_entity' ? 1.0 + ((item.awakened || 0) * 0.1) : 1.0;
+        // Stats scale based on awakening
+        const awakeMult = 1.0 + ((item.awakened || 0) * 0.1);
 
         let finalItemATK = Math.floor((item.bonusATK || 0) * awakeMult);
         let finalItemHP = Math.floor((item.bonusHP || 0) * awakeMult);
@@ -200,9 +232,9 @@ export default function HomeArea({ stats, inventory, setInventory, equippedItems
           <div className={`absolute inset-0 rounded-full blur-md ${activePassives.length > 0 ? 'bg-game-accent/30 animate-pulse' : 'bg-game-surface/50'}`}></div>
           <div className={`relative w-full h-full rounded-full border-2 flex items-center justify-center bg-[#111827] z-10 
             ${activePet ? getRarityStyle(activePet.rarity).split(' ')[0] : 'border-game-surface'}
-            ${activePassives.length > 0 ? 'text-game-accent shadow-[0_0_10px_rgba(251,191,36,0.6)]' : 'text-gray-500'}`}>
+            ${activePet && activePet.rarity === 'god' ? 'animate-rainbow shadow-[0_0_15px_rgba(255,255,255,0.8)]' : (activePassives.length > 0 || (activePet && (activePet.awakened || 0) > 0)) ? 'text-game-accent shadow-[0_0_10px_rgba(251,191,36,0.6)]' : 'text-gray-500'}`}>
             
-            {activePet ? renderIcon(activePet.iconName, 'w-10 h-10') : <Dog size={40} />}
+            {activePet ? renderIcon(activePet.iconName, getIconAccentColor(activePet.rarity)) : <Dog size={40} />}
           </div>
           {activePet && (
              <span className="text-[9px] font-bold text-game-primary mt-1 absolute -bottom-5 whitespace-nowrap">
@@ -297,13 +329,13 @@ export default function HomeArea({ stats, inventory, setInventory, equippedItems
                   {/* Slot Label rendering -> check if awakened first, else max, else level */}
                   {item && (
                      <div className={`absolute -bottom-2 -right-2 bg-[#111827] border border-current text-[9px] font-bold px-1.5 py-0.5 rounded shadow-md truncate max-w-[50px]
-                       ${(item.awakened || 0) > 0 ? 'text-game-accent animate-pulse' : ''}
+                       ${(item.awakened || 0) > 0 ? 'text-game-accent animate-pulse shadow-[0_0_8px_rgba(251,191,36,0.6)]' : ''}
                      `}>
-                       {(item.awakened || 0) > 0 ? `覚醒+${item.awakened}` : (item.upgradeLevel >= 4 && item.type !== 'pet_entity') ? 'MAX' : item.upgradeLevel > 0 ? `+${item.upgradeLevel}` : 'Lv.1'}
+                       {(item.awakened || 0) > 0 ? `覚醒 Lv.${item.awakened}` : (item.upgradeLevel >= 4 && item.type !== 'pet_entity') ? 'MAX' : `Lv.${(item.upgradeLevel || 0) + 1}`}
                      </div>
                   )}
-                  {/* Aura if Awakened */}
-                  {item && (item.awakened || 0) > 0 && <div className="absolute inset-0 border-2 border-game-accent rounded-xl animate-ping opacity-30 pointer-events-none"></div>}
+                  {/* Aura if God or Awakened or MAX */}
+                  {item && <div className={`aura-base ${getAuraClass(item)}`}></div>}
                 </button>
                 <span className="text-[10px] text-gray-500 font-bold">{slot.label}</span>
               </div>
@@ -329,28 +361,77 @@ export default function HomeArea({ stats, inventory, setInventory, equippedItems
                 
                 // Merge Logic calculations
                 // Find how many exact duplicates exist IN TOTAL in inventory
-                const duplicates = inventory.filter(i => i.label === item.label && (i.upgradeLevel || 0) === (item.upgradeLevel || 0) && i.id !== item.id);
-                // Pets never reach max level naturally, so they never awaken. Equipment caps at 4.
-                const isMaxLevel = item.type === 'pet_entity' ? false : (item.upgradeLevel || 0) >= 4; 
-                const canMerge = !isEquipped && duplicates.length > 0;
+                // For Evolution and Awakening, we allow using any level item of the same rarity
+                const isMaxLevel = (item.upgradeLevel || 0) >= 4;
+                const isMaxAwakened = (item.awakened || 0) >= 4;
+                const isGod = item.rarity === 'god';
+
+                const duplicates = inventory.filter(i => {
+                  if (i.id === item.id) return false;
+                  if (i.label !== item.label || i.rarity !== item.rarity) return false;
+                  
+                  // For Evolution and Awakening, we allow using any item of the same name and rarity.
+                  // For standard upgrades (not max level), levels must match.
+                  if (!isMaxLevel) {
+                    return (i.upgradeLevel || 0) === (item.upgradeLevel || 0);
+                  }
+                  
+                  return true;
+                });
+                
+                // Evolution logic
+                // Gear: Awakened Lv.4 -> Next Rarity Lv.1
+                // Pet: MAX (upgradeLevel 4) -> Next Rarity Lv.1
+                const canEvolve = !isGod && duplicates.length > 0 && (
+                  (item.type !== 'pet_entity' && isMaxAwakened) ||
+                  (item.type === 'pet_entity' && isMaxLevel)
+                );
+
+                // Awakening logic
+                // Gear: MAX -> Awakened Lv.1
+                // God Pet: MAX -> Awakened Lv.1
+                const canAwaken = isMaxLevel && duplicates.length > 0 && !canEvolve && (
+                  (item.type !== 'pet_entity' && (item.awakened || 0) < 4) ||
+                  (item.type === 'pet_entity' && isGod)
+                );
+
+                // Standard upgrade logic
+                const canUpgrade = !isMaxLevel && duplicates.length > 0;
+                
+                const canMerge = (canEvolve || canAwaken || canUpgrade);
 
                 const handleMerge = () => {
                   const consumeItem = duplicates[0];
                   
-                  if (isMaxLevel) {
-                    // AWAKENING LOGIC
+                  if (canEvolve) {
+                    const nextRarity = getNextRarity(item.rarity);
+                    const isToGod = nextRarity === 'god';
+                    const statMult = isToGod ? (item.type === 'pet_entity' ? 5 : 10) : 1.5;
+
+                    setShowEvolutionAnim(true);
+                    setTimeout(() => setShowEvolutionAnim(false), 2000);
+
                     setInventory(prev => prev.map(i => {
                       if (i.id === item.id) {
                         return {
                           ...i,
-                          awakened: (i.awakened || 0) + 1
+                          rarity: nextRarity,
+                          upgradeLevel: 0,
+                          awakened: 0,
+                          bonusATK: Math.floor(i.bonusATK * statMult),
+                          bonusHP: Math.floor(i.bonusHP * statMult)
                         };
                       }
                       return i;
                     }).filter(i => i.id !== consumeItem.id));
-                    alert(`🌟限界突破！ ${item.label} が「覚醒」しました！ (ベースステータスが恒久的に+10%増加)`);
+                  } else if (canAwaken) {
+                    setInventory(prev => prev.map(i => {
+                      if (i.id === item.id) {
+                        return { ...i, awakened: (i.awakened || 0) + 1 };
+                      }
+                      return i;
+                    }).filter(i => i.id !== consumeItem.id));
                   } else {
-                    // STANDARD MERGE LOGIC
                     setInventory(prev => prev.map(i => {
                       if (i.id === item.id) {
                         const growthRate = item.type === 'pet_entity' ? 1.1 : 1.5;
@@ -366,9 +447,10 @@ export default function HomeArea({ stats, inventory, setInventory, equippedItems
                   }
                 };
                 
-                const awakeDisplay = (item.awakened || 0) > 0 ? `[覚醒 +${item.awakened}]` : '';
-                const baseName = isMaxLevel ? `${item.label} MAX` : item.upgradeLevel > 0 ? `${item.label} +${item.upgradeLevel}` : item.label;
-                const displayName = `${awakeDisplay} ${baseName}`.trim();
+                const awakeDisplay = (item.awakened || 0) > 0 ? `[覚醒 Lv.${item.awakened}]` : '';
+                const baseLevelText = isMaxLevel ? 'MAX' : `Lv.${(item.upgradeLevel || 0) + 1}`;
+                // Clean display name: Rarity naming should not be duplicated if already in label
+                const displayName = `${item.label} ${baseLevelText} ${awakeDisplay}`.trim();
 
                 // Calc display stats including awake multiplier locally for display
                 const awakeMult = item.type !== 'pet_entity' ? 1.0 + ((item.awakened || 0) * 0.1) : 1.0;
@@ -376,18 +458,20 @@ export default function HomeArea({ stats, inventory, setInventory, equippedItems
                 const displayHp = Math.floor((item.bonusHP || 0) * awakeMult);
 
                 return (
-                  <div key={item.id} className={`glass-panel p-3 border-l-4 flex gap-3 items-center relative overflow-hidden
+                  <div key={item.id} className={`glass-panel p-3 border-l-4 flex gap-3 items-center relative overflow-hidden transition-all
                     ${isEquipped ? 'border-l-game-primary bg-game-primary/5' : 'border-l-game-surface'}
-                    ${(item.awakened || 0) > 0 ? 'shadow-[0_0_15px_rgba(251,191,36,0.15)]' : ''}
+                    ${item.rarity === 'god' ? 'ring-2 ring-white shadow-[0_0_20px_rgba(255,255,255,0.3)]' : (item.awakened || 0) > 0 ? 'shadow-[0_0_20px_rgba(251,191,36,0.2)] border-l-game-accent' : ''}
+                    ${isMaxLevel && !isEquipped ? 'shadow-[0_0_15px_rgba(251,191,36,0.15)] ring-1 ring-game-accent/20' : ''}
                   `}>
                     
-                    {/* Awakened Flash Effect Background */}
-                    {(item.awakened || 0) > 0 && <div className="absolute inset-0 bg-gradient-to-r from-game-accent/5 to-transparent pointer-events-none"></div>}
+                    {/* Awakened / Collection Flash Effect Background */}
+                    {(item.awakened || 0) > 0 && <div className="absolute inset-0 bg-gradient-to-r from-game-accent/10 to-transparent pointer-events-none animate-pulse"></div>}
+                    {isMaxLevel && !isEquipped && <div className="absolute inset-0 bg-gradient-to-r from-game-accent/5 to-transparent pointer-events-none"></div>}
 
                     <div className={`w-14 h-14 rounded-lg flex items-center justify-center shrink-0 border relative ${getRarityStyle(item.rarity)}`}>
                        {renderIcon(item.iconName, getIconAccentColor(item.rarity))}
-                       {isMaxLevel && (item.awakened || 0) === 0 && <div className="absolute -top-2 -right-2 bg-red-500 text-white text-[8px] px-1 font-bold rounded">MAX</div>}
-                       {(item.awakened || 0) > 0 && <div className="absolute inset-0 border-[3px] border-game-accent rounded-lg opacity-70 animate-pulse pointer-events-none"></div>}
+                       {isMaxLevel && (item.awakened || 0) === 0 && item.rarity !== 'god' && <div className="absolute -top-2 -right-2 bg-red-500 text-white text-[8px] px-1 font-bold rounded shadow-[0_0_5px_rgba(239,68,68,0.5)]">MAX</div>}
+                       {item && <div className={`aura-base !rounded-lg ${getAuraClass(item)}`}></div>}
                     </div>
                     
                     <div className="flex-1 min-w-0 relative z-10">
@@ -399,25 +483,41 @@ export default function HomeArea({ stats, inventory, setInventory, equippedItems
 
                       {/* Merge Button rendering under stats */}
                       {canMerge && (
-                        <button onClick={handleMerge} className={`mt-2 text-[10px] font-bold px-2 py-0.5 rounded flex items-center gap-1 transition-colors ${
-                          isMaxLevel 
-                           ? 'text-game-accent bg-game-accent/10 border border-game-accent hover:bg-game-accent/20' 
-                           : 'text-blue-400 bg-blue-500/10 border border-blue-500 hover:bg-blue-500/20'
-                        }`}>
-                          {isMaxLevel ? <><Sparkles size={10} /> 限界突破 (覚醒させる)</> : <><Check size={10} /> 同じ装備を合成 (強化)</>}
+                        <button 
+                          onClick={handleMerge} 
+                          className={`mt-2 text-[10px] font-black px-2 py-1 rounded-md flex items-center justify-center gap-1.5 transition-all active:scale-95 shadow-md border
+                            ${canEvolve 
+                               ? 'bg-gradient-to-r from-yellow-400 to-orange-500 text-white border-white animate-pulse' 
+                               : canAwaken
+                               ? 'text-game-accent bg-game-accent/10 border-game-accent/50'
+                               : 'text-blue-400 bg-blue-500/10 border-blue-500/50'
+                            }`}
+                        >
+                          {canEvolve 
+                            ? <><Sparkles size={12} /> 上のレアリティへ進化！</> 
+                            : canAwaken 
+                            ? <><LucideIcons.TrendingUp size={12} /> 限界突破 (覚醒)</> 
+                            : <><Check size={12} /> 同じものを合成 (強化)</>
+                          }
                         </button>
                       )}
                       
-                      {isMaxLevel && !isEquipped && (item.awakened || 0) === 0 && (
-                        <span className="mt-2 text-[10px] font-bold text-game-accent flex items-center gap-1">
-                           <Check size={12} /> コレクションボーナス発動中! (未装備でもステータス反映)
-                        </span>
-                      )}
-                      {!isEquipped && (item.awakened || 0) > 0 && (
-                        <span className="mt-2 text-[10px] font-bold text-game-accent flex items-center gap-1">
-                           <Sparkles size={12} /> 覚醒ボーナス発動中! (パッシブ反映)
-                        </span>
-                      )}
+                      {/* Define flags for render */}
+                      {(() => {
+                        const isGearCollection = item.type !== 'pet_entity' && ((item.upgradeLevel || 0) >= 4 || (item.awakened || 0) > 0);
+                        const isPetCollection = item.type === 'pet_entity' && item.rarity === 'god' && (item.awakened || 0) > 0;
+                        
+                        return !isEquipped && (isGearCollection || isPetCollection) && (
+                          <div className="mt-2 p-1.5 bg-game-accent/10 border border-game-accent/30 rounded-md">
+                            <span className="text-[10px] font-bold text-game-accent flex items-center gap-1">
+                               <Check size={12} /> コレクションボーナス発動中!
+                            </span>
+                            <p className="text-[8px] text-game-accent/80 mt-0.5 ml-4 leading-tight">
+                              ※未装備でもステータスに加算されています (覚醒中の方も含む)
+                            </p>
+                          </div>
+                        );
+                      })()}
                     </div>
 
                     {!isEquipped ? (
@@ -443,6 +543,16 @@ export default function HomeArea({ stats, inventory, setInventory, equippedItems
               >
                 装備を外す
               </button>
+          </div>
+        </div>
+      )}
+      {/* Evolution Success Animation Overlay */}
+      {showEvolutionAnim && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center pointer-events-none">
+          <div className="absolute inset-0 bg-white/20 backdrop-blur-sm animate-pulse"></div>
+          <div className="p-8 rounded-2xl bg-white shadow-[0_0_50px_rgba(255,255,255,1)] animate-evolution-success flex flex-col items-center">
+             <Sparkles size={80} className="text-yellow-400 mb-4" />
+             <h1 className="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-red-500 via-yellow-500 via-green-500 via-blue-500 to-purple-500 uppercase tracking-tighter">Evolution!</h1>
           </div>
         </div>
       )}

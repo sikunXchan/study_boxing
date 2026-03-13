@@ -1,0 +1,59 @@
+{
+  "gemini_survivor_stats": {
+    "atk": 5000,
+    "hp": 5000
+  },
+  "gemini_survivor_inventory": [
+    {
+      "label": "万年筆",
+      "type": "weapon",
+      "iconName": "ScrollText",
+      "rarity": "legendary",
+      "bonusATK": 1000,
+      "bonusHP": 1000,
+      "id": "gear_ready_to_evolve",
+      "upgradeLevel": 4,
+      "awakened": 4
+    },
+    {
+      "label": "万年筆",
+      "type": "weapon",
+      "iconName": "ScrollText",
+      "rarity": "legendary",
+      "bonusATK": 100,
+      "bonusHP": 100,
+      "id": "gear_material",
+      "upgradeLevel": 0
+    },
+    {
+      "label": "アルパカ",
+      "type": "pet_entity",
+      "iconName": "Flame",
+      "rarity": "legendary",
+      "bonusATK": 2000,
+      "bonusHP": 2000,
+      "id": "pet_ready_to_evolve",
+      "upgradeLevel": 4
+    },
+    {
+      "label": "アルパカ",
+      "type": "pet_entity",
+      "iconName": "Flame",
+      "rarity": "legendary",
+      "bonusATK": 200,
+      "bonusHP": 200,
+      "id": "pet_material",
+      "upgradeLevel": 0
+    }
+  ],
+  "gemini_survivor_equipped": {
+    "weapon": "gear_ready_to_evolve",
+    "pet_entity": "pet_ready_to_evolve"
+  },
+  "gemini_survivor_resources": {
+    "stamina": 100,
+    "coins": 1000000,
+    "gems": 10000
+  },
+  "gemini_survivor_save_version": 2
+}

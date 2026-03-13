@@ -66,6 +66,98 @@
   animation: flash-rare 1.2s ease-in-out;
 }
 
+@keyframes aura-pulse {
+  0% { transform: scale(1); opacity: 0.6; filter: brightness(1); }
+  50% { transform: scale(1.15); opacity: 0.9; filter: brightness(1.5); }
+  100% { transform: scale(1); opacity: 0.6; filter: brightness(1); }
+}
+
+@keyframes rainbow-aura {
+  0% { border-color: #ff0000; box-shadow: 0 0 25px rgba(255,0,0,0.6), inset 0 0 15px rgba(255,0,0,0.4); }
+  14% { border-color: #ff7f00; box-shadow: 0 0 25px rgba(255,127,0,0.6), inset 0 0 15px rgba(255,127,0,0.4); }
+  28% { border-color: #ffff00; box-shadow: 0 0 25px rgba(255,255,0,0.6), inset 0 0 15px rgba(255,255,0,0.4); }
+  42% { border-color: #00ff00; box-shadow: 0 0 25px rgba(0,255,0,0.6), inset 0 0 15px rgba(0,255,0,0.4); }
+  57% { border-color: #0000ff; box-shadow: 0 0 25px rgba(0,0,255,0.6), inset 0 0 15px rgba(0,0,255,0.4); }
+  71% { border-color: #4b0082; box-shadow: 0 0 25px rgba(75,0,130,0.6), inset 0 0 15px rgba(75,0,130,0.4); }
+  85% { border-color: #8b00ff; box-shadow: 0 0 25px rgba(139,0,255,0.6), inset 0 0 15px rgba(139,0,255,0.4); }
+  100% { border-color: #ff0000; box-shadow: 0 0 25px rgba(255,0,0,0.6), inset 0 0 15px rgba(255,0,0,0.4); }
+}
+
+@keyframes pulse-glow {
+  0%, 100% { box-shadow: 0 0 5px rgba(255,255,255,0.5); transform: scale(1); }
+  50% { box-shadow: 0 0 20px rgba(255,255,255,0.9); transform: scale(1.05); }
+}
+
+.aura-base {
+  @apply absolute inset-0 rounded-xl pointer-events-none z-0;
+}
+
+.aura-legendary {
+  box-shadow: 0 0 20px #fbbf24, 0 0 40px rgba(251,191,36,0.3), inset 0 0 15px #fbbf24;
+  animation: aura-pulse 1.5s ease-in-out infinite;
+  border: 2px solid rgba(251, 191, 36, 0.7);
+}
+
+.aura-epic {
+  box-shadow: 0 0 20px #8b5cf6, 0 0 40px rgba(139,92,246,0.3), inset 0 0 15px #8b5cf6;
+  animation: aura-pulse 1.5s ease-in-out infinite;
+  border: 2px solid rgba(139, 92, 246, 0.7);
+}
+
+.aura-rare {
+  box-shadow: 0 0 20px #3b82f6, 0 0 40px rgba(59,130,246,0.3), inset 0 0 15px #3b82f6;
+  animation: aura-pulse 1.5s ease-in-out infinite;
+  border: 2px solid rgba(59, 130, 246, 0.7);
+}
+
+.aura-uncommon {
+  box-shadow: 0 0 20px #10b981, 0 0 40px rgba(16,185,129,0.3), inset 0 0 15px #10b981;
+  animation: aura-pulse 1.5s ease-in-out infinite;
+  border: 2px solid rgba(16, 185, 129, 0.7);
+}
+
+.aura-god {
+  animation: rainbow-aura 2.5s linear infinite, aura-pulse 1.2s ease-in-out infinite;
+  border-width: 3px;
+  filter: contrast(1.2) saturate(1.5);
+}
+
+.animate-god-glow {
+  animation: god-glow 2s linear infinite;
+}
+
+.btn-evolution {
+  @apply bg-gradient-to-r from-red-600 via-yellow-500 to-red-600 bg-[length:200%_auto] text-white border-2 border-white font-black uppercase tracking-wider shadow-[0_0_20px_rgba(255,255,255,0.5)];
+  animation: aura-pulse 1s ease-in-out infinite, aura-rotate-bg 3s linear infinite;
+}
+
+@keyframes aura-rotate-bg {
+  0% { background-position: 0% 50%; }
+  100% { background-position: 200% 50%; }
+}
+
+@keyframes evolution-flash {
+  0% { opacity: 0; transform: scale(0.8); background: white; }
+  20% { opacity: 1; transform: scale(1.1); background: white; white-space: nowrap; }
+  50% { opacity: 1; background: linear-gradient(to right, #ff0000, #ffff00, #00ff00, #00ffff, #0000ff, #ff00ff); }
+  100% { opacity: 0; transform: scale(1.5); }
+}
+
+.animate-evolution-success {
+  animation: evolution-flash 1s ease-out forwards;
+}
+
+@keyframes rainbow-shine {
+  0% { background-position: 0% 50%; }
+  100% { background-position: 200% 50%; }
+}
+
+.rainbow-shine-overlay {
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+  background-size: 200% 100%;
+  animation: rainbow-shine 2s infinite linear;
+}
+
 /* Custom Scrollbar for immersive feel */
 ::-webkit-scrollbar {
   width: 6px;

@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react';
 import { User, Activity, Sword, ChevronUp, X, Check, Dog, Sparkles } from 'lucide-react';
 import * as LucideIcons from 'lucide-react';
-import { calculateLevelData } from '../utils/level';
+import { calculateLevelData, calculateMultiplier } from '../utils/level';
 
 export default function HomeArea({ stats, inventory, setInventory, equippedItems, setEquippedItems }) {
   const [selectedSlot, setSelectedSlot] = useState(null);

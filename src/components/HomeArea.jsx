@@ -135,30 +135,28 @@ export default function HomeArea({ stats, inventory, setInventory, equippedItems
     const equippedItemIds = new Set(Object.values(equippedItems).filter(Boolean));
 
     inventory.forEach(item => {
-      // If item is Max Level (+4) or Awakened, and NOT equipped, grant its stats passively!
-      // For pets, only God rarity can have a collection bonus (Awakened)
-      const isGearCollection = item.type !== 'pet_entity' && ((item.upgradeLevel || 0) >= 4 || (item.awakened || 0) > 0);
-      const isPetCollection = item.type === 'pet_entity' && item.rarity === 'god' && (item.awakened || 0) > 0;
+      const isGear = item.type !== 'pet_entity';
+      const isMax = (item.upgradeLevel || 0) >= 4;
+      const isCollectionItem = (isMax || (item.awakened || 0) > 0 || item.rarity === 'god');
 
-      if ((isGearCollection || isPetCollection) && !equippedItemIds.has(item.id)) {
-         // Apply Awakening Math if applicable
-         const awakeMult = 1.0 + ((item.awakened || 0) * 0.1);
-         passiveBonusATK += Math.floor((item.bonusATK || 0) * awakeMult);
-         passiveBonusHP += Math.floor((item.bonusHP || 0) * awakeMult);
+      if (isCollectionItem && !equippedItemIds.has(item.id)) {
+         const upgradeFactor = Math.pow(isGear ? 1.5 : 1.1, item.upgradeLevel || 0);
+         const awakeFactor = 1 + (item.awakened || 0) * (isGear ? 0.2 : 0.1);
+         passiveBonusATK += Math.floor((item.bonusATK || 0) * upgradeFactor * awakeFactor * 0.1);
+         passiveBonusHP += Math.floor((item.bonusHP || 0) * upgradeFactor * awakeFactor * 0.1);
       }
     });
     
-    // 2. Aggregate stats for currently equipped items
     equippedItemIds.forEach(itemId => {
       const item = inventory.find(i => i.id === itemId);
       if (item) {
-        // Stats scale based on awakening
-        const awakeMult = 1.0 + ((item.awakened || 0) * 0.1);
+        const isGear = item.type !== 'pet_entity';
+        const upgradeFactor = Math.pow(isGear ? 1.5 : 1.1, item.upgradeLevel || 0);
+        const awakeFactor = 1 + (item.awakened || 0) * (isGear ? 0.2 : 0.1);
 
-        let finalItemATK = Math.floor((item.bonusATK || 0) * awakeMult);
-        let finalItemHP = Math.floor((item.bonusHP || 0) * awakeMult);
+        let finalItemATK = Math.floor((item.bonusATK || 0) * upgradeFactor * awakeFactor);
+        let finalItemHP = Math.floor((item.bonusHP || 0) * upgradeFactor * awakeFactor);
 
-        // Apply specific pet gear multipliers (Only to equipped items, NOT collection bonuses)
         if (item.type === 'collar') {
            finalItemATK = Math.floor(finalItemATK * collarMultiplierATK);
            finalItemHP = Math.floor(finalItemHP * collarMultiplierHP);
@@ -238,7 +236,7 @@ export default function HomeArea({ stats, inventory, setInventory, equippedItems
           </div>
           {activePet && (
              <span className="text-[9px] font-bold text-game-primary mt-1 absolute -bottom-5 whitespace-nowrap">
-               ATK+{Math.floor(activePet.bonusATK * Math.pow(1.1, activePet.upgradeLevel || 0))} / HP+{Math.floor(activePet.bonusHP * Math.pow(1.1, activePet.upgradeLevel || 0))}
+              ATK+{Math.floor(activePet.bonusATK * Math.pow(1.1, activePet.upgradeLevel || 0) * (1 + (activePet.awakened || 0) * 0.1))} / HP+{Math.floor(activePet.bonusHP * Math.pow(1.1, activePet.upgradeLevel || 0) * (1 + (activePet.awakened || 0) * 0.1))}
              </span>
           )}
           {activePassives.length > 0 && (
@@ -359,45 +357,26 @@ export default function HomeArea({ stats, inventory, setInventory, equippedItems
               activeModalItems.map(item => {
                 const isEquipped = equippedItems[selectedSlot] === item.id;
                 
-                // Merge Logic calculations
-                // Find how many exact duplicates exist IN TOTAL in inventory
-                // For Evolution and Awakening, we allow using any level item of the same rarity
+                const isGear = item.type !== 'pet_entity';
                 const isMaxLevel = (item.upgradeLevel || 0) >= 4;
-                const isMaxAwakened = (item.awakened || 0) >= 4;
-                const isGod = item.rarity === 'god';
-
                 const duplicates = inventory.filter(i => {
                   if (i.id === item.id) return false;
                   if (i.label !== item.label || i.rarity !== item.rarity) return false;
-                  
-                  // For Evolution and Awakening, we allow using any item of the same name and rarity.
-                  // For standard upgrades (not max level), levels must match.
                   if (!isMaxLevel) {
                     return (i.upgradeLevel || 0) === (item.upgradeLevel || 0);
                   }
-                  
                   return true;
                 });
                 
-                // Evolution logic
-                // Gear: Awakened Lv.4 -> Next Rarity Lv.1
-                // Pet: MAX (upgradeLevel 4) -> Next Rarity Lv.1
-                const canEvolve = !isGod && duplicates.length > 0 && (
-                  (item.type !== 'pet_entity' && isMaxAwakened) ||
-                  (item.type === 'pet_entity' && isMaxLevel)
+                // v10 Rules:
+                // Evolution: Gear at Awakened Lv.4+, Pet at MAX Lv.5.
+                const canEvolve = item.rarity !== 'god' && duplicates.length > 0 && (
+                  (isGear && (item.awakened || 0) >= 4) ||
+                  (!isGear && isMaxLevel)
                 );
-
-                // Awakening logic
-                // Gear: MAX -> Awakened Lv.1
-                // God Pet: MAX -> Awakened Lv.1
-                const canAwaken = isMaxLevel && duplicates.length > 0 && !canEvolve && (
-                  (item.type !== 'pet_entity' && (item.awakened || 0) < 4) ||
-                  (item.type === 'pet_entity' && isGod)
-                );
-
-                // Standard upgrade logic
+                // Awakening: Available after MAX Level.
+                const canAwaken = isMaxLevel && duplicates.length > 0;
                 const canUpgrade = !isMaxLevel && duplicates.length > 0;
-                
                 const canMerge = (canEvolve || canAwaken || canUpgrade);
 
                 const handleMerge = () => {
@@ -406,20 +385,28 @@ export default function HomeArea({ stats, inventory, setInventory, equippedItems
                   if (canEvolve) {
                     const nextRarity = getNextRarity(item.rarity);
                     const isToGod = nextRarity === 'god';
-                    const statMult = isToGod ? (item.type === 'pet_entity' ? 5 : 10) : 1.5;
+                    // v10: Guaranteed Evolution Multipliers
+                    // Gear: 1.33x (+33% power jump)
+                    // Pet: 2.5x (Non-God), 4.0x (to God)
+                    const statMult = isToGod 
+                      ? (item.type === 'pet_entity' ? 4.0 : 1.33) 
+                      : (item.type === 'pet_entity' ? 2.5 : 1.33);
 
                     setShowEvolutionAnim(true);
                     setTimeout(() => setShowEvolutionAnim(false), 2000);
 
                     setInventory(prev => prev.map(i => {
                       if (i.id === item.id) {
+                        const isGear = i.type !== 'pet_entity';
+                        const upgradeMult = Math.pow(isGear ? 1.5 : 1.1, i.upgradeLevel || 0);
+                        const awakeMult = 1 + (i.awakened || 0) * (isGear ? 0.2 : 0.1);
                         return {
                           ...i,
                           rarity: nextRarity,
                           upgradeLevel: 0,
                           awakened: 0,
-                          bonusATK: Math.floor(i.bonusATK * statMult),
-                          bonusHP: Math.floor(i.bonusHP * statMult)
+                          bonusATK: Math.floor(i.bonusATK * upgradeMult * awakeMult * statMult),
+                          bonusHP: Math.floor(i.bonusHP * upgradeMult * awakeMult * statMult)
                         };
                       }
                       return i;
@@ -434,13 +421,7 @@ export default function HomeArea({ stats, inventory, setInventory, equippedItems
                   } else {
                     setInventory(prev => prev.map(i => {
                       if (i.id === item.id) {
-                        const growthRate = item.type === 'pet_entity' ? 1.1 : 1.5;
-                        return {
-                          ...i,
-                          upgradeLevel: (i.upgradeLevel || 0) + 1,
-                          bonusATK: Math.max(1, Math.floor((i.bonusATK || 0) * growthRate)),
-                          bonusHP: Math.max(1, Math.floor((i.bonusHP || 0) * growthRate))
-                        };
+                        return { ...i, upgradeLevel: (i.upgradeLevel || 0) + 1 };
                       }
                       return i;
                     }).filter(i => i.id !== consumeItem.id));
@@ -449,13 +430,12 @@ export default function HomeArea({ stats, inventory, setInventory, equippedItems
                 
                 const awakeDisplay = (item.awakened || 0) > 0 ? `[覚醒 Lv.${item.awakened}]` : '';
                 const baseLevelText = isMaxLevel ? 'MAX' : `Lv.${(item.upgradeLevel || 0) + 1}`;
-                // Clean display name: Rarity naming should not be duplicated if already in label
                 const displayName = `${item.label} ${baseLevelText} ${awakeDisplay}`.trim();
 
-                // Calc display stats including awake multiplier locally for display
-                const awakeMult = item.type !== 'pet_entity' ? 1.0 + ((item.awakened || 0) * 0.1) : 1.0;
-                const displayAtk = Math.floor((item.bonusATK || 0) * awakeMult);
-                const displayHp = Math.floor((item.bonusHP || 0) * awakeMult);
+                const upgradeMult = Math.pow(isGear ? 1.5 : 1.1, item.upgradeLevel || 0);
+                const awakeMult = 1.0 + ((item.awakened || 0) * (isGear ? 0.2 : 0.1));
+                const displayAtk = Math.floor((item.bonusATK || 0) * upgradeMult * awakeMult);
+                const displayHp = Math.floor((item.bonusHP || 0) * upgradeMult * awakeMult);
 
                 return (
                   <div key={item.id} className={`glass-panel p-3 border-l-4 flex gap-3 items-center relative overflow-hidden transition-all

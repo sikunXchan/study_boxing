@@ -1,59 +1,108 @@
 {
   "gemini_survivor_stats": {
-    "atk": 5000,
+    "atk": 1000,
     "hp": 5000
   },
   "gemini_survivor_inventory": [
     {
-      "label": "万年筆",
+      "id": "v10_test_leg_weapon_ready",
+      "label": "不眠の万年筆",
       "type": "weapon",
       "iconName": "ScrollText",
       "rarity": "legendary",
-      "bonusATK": 1000,
-      "bonusHP": 1000,
-      "id": "gear_ready_to_evolve",
+      "bonusATK": 3000,
+      "bonusHP": 0,
       "upgradeLevel": 4,
-      "awakened": 4
+      "awakened": 4,
+      "description": "進化準備完了：Lv.5 MAX & 覚醒 Lv.4"
     },
     {
-      "label": "万年筆",
+      "id": "v10_test_leg_weapon_material",
+      "label": "不眠 of the 万年筆",
       "type": "weapon",
       "iconName": "ScrollText",
       "rarity": "legendary",
-      "bonusATK": 100,
-      "bonusHP": 100,
-      "id": "gear_material",
-      "upgradeLevel": 0
+      "bonusATK": 3000,
+      "bonusHP": 0,
+      "upgradeLevel": 4,
+      "awakened": 0,
+      "description": "進化用素材"
     },
     {
-      "label": "アルパカ",
+      "id": "v10_test_god_weapon_evolved",
+      "label": "不眠の万年筆 (神)",
+      "type": "weapon",
+      "iconName": "ScrollText",
+      "rarity": "god",
+      "bonusATK": 36358,
+      "bonusHP": 0,
+      "upgradeLevel": 0,
+      "awakened": 0,
+      "description": "進化直後のGod：ベース値が継承されている"
+    },
+    {
+      "id": "v10_test_leg_pet_ready",
+      "label": "不死鳥",
       "type": "pet_entity",
       "iconName": "Flame",
       "rarity": "legendary",
-      "bonusATK": 2000,
-      "bonusHP": 2000,
-      "id": "pet_ready_to_evolve",
-      "upgradeLevel": 4
+      "bonusATK": 10000,
+      "bonusHP": 10000,
+      "upgradeLevel": 4,
+      "awakened": 0,
+      "description": "進化準備完了：Lv.5 MAX"
     },
     {
-      "label": "アルパカ",
+      "id": "v10_test_leg_pet_material",
+      "label": "不死鳥",
       "type": "pet_entity",
       "iconName": "Flame",
       "rarity": "legendary",
-      "bonusATK": 200,
-      "bonusHP": 200,
-      "id": "pet_material",
-      "upgradeLevel": 0
+      "bonusATK": 10000,
+      "bonusHP": 10000,
+      "upgradeLevel": 0,
+      "awakened": 0,
+      "description": "ペット進化は同一レアリティ素材1つのみ必要"
+    },
+    {
+      "id": "v10_test_god_pet_evolved",
+      "label": "不死鳥 (神)",
+      "type": "pet_entity",
+      "iconName": "Flame",
+      "rarity": "god",
+      "bonusATK": 58564,
+      "bonusHP": 58564,
+      "upgradeLevel": 0,
+      "awakened": 0,
+      "description": "進化直後のGodペット：4.0倍のパワーアップ"
+    },
+    {
+      "id": "v10_test_uncommon_baseline",
+      "label": "軽量スキップロープ",
+      "type": "weapon",
+      "iconName": "Orbit",
+      "rarity": "uncommon",
+      "bonusATK": 0,
+      "bonusHP": 250,
+      "upgradeLevel": 0,
+      "awakened": 0
     }
   ],
   "gemini_survivor_equipped": {
-    "weapon": "gear_ready_to_evolve",
-    "pet_entity": "pet_ready_to_evolve"
+    "weapon": "v10_test_leg_weapon_ready",
+    "armor": null,
+    "necklace": null,
+    "gloves": null,
+    "belt": null,
+    "boots": null,
+    "collar": null,
+    "toy": null,
+    "pet_entity": "v10_test_leg_pet_ready"
   },
   "gemini_survivor_resources": {
     "stamina": 100,
-    "coins": 1000000,
-    "gems": 10000
+    "coins": 9999999,
+    "gems": 88888
   },
   "gemini_survivor_save_version": 2
 }

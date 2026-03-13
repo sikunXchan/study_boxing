@@ -26,10 +26,10 @@ export function calculateLevelData(totalExp) {
 }
 
 /**
- * V10: New Multiplier Logic
- * Capped at 100x. Reaches ~100x at Level 80.
- * Formula: min(100, 1.06 ^ (level - 1))
+ * V12: Linear Multiplier Logic
+ * Multiplier = Level, capped at 100x.
+ * Reaches 100x at Level 100 and stays there.
  */
 export function calculateMultiplier(level) {
-  return Math.min(100, Math.pow(1.06, level - 1));
+  return Math.min(100, level);
 }

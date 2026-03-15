@@ -51,8 +51,8 @@ export default function ShopArea({ resources, setResources, setInventory }) {
   };
 
   const handleExchange = () => {
-    if (resources.coins >= 300) {
-      setResources(prev => ({ ...prev, coins: prev.coins - 300, gems: prev.gems + 100 }));
+    if (resources.coins >= 200) {
+      setResources(prev => ({ ...prev, coins: prev.coins - 200, gems: prev.gems + 100 }));
     } else {
       alert('コインが足りません！');
     }
@@ -259,13 +259,13 @@ export default function ShopArea({ resources, setResources, setInventory }) {
           <button 
             onClick={handleExchange}
             className={`flex items-center gap-2 px-4 py-2 rounded-lg font-bold text-sm transition-all active:scale-95
-              ${resources.coins >= 300 
+              ${resources.coins >= 200 
                 ? 'bg-[#fbbf24]/20 text-[#fbbf24] border border-[#fbbf24]/50 hover:bg-[#fbbf24]/30 shadow-[0_0_10px_rgba(251,191,36,0.2)]' 
                 : 'bg-game-surface text-gray-500 border border-game-surface/50 opacity-50'
               }`}
           >
             <div className="flex items-center gap-1">
-              💰 300
+              💰 200
             </div>
             <ChevronRight size={16} />
           </button>

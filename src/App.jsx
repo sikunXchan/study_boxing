@@ -125,7 +125,7 @@ function App() {
               <h3 className="text-center font-bold text-game-accent mb-4">ステータスボーナス</h3>
               <div className="flex justify-between items-center mb-2 border-b border-game-surface pb-2">
                 <span className="text-gray-400 text-sm">基礎ステータス上昇</span>
-                <span className="font-bold text-white text-lg font-mono">x {(1.2 ** (levelUpData.level - 1)).toFixed(2)}</span>
+                <span className="font-bold text-white text-lg font-mono">x {Math.min(100, levelUpData.level).toFixed(2)}</span>
               </div>
               <div className="flex justify-between items-center pt-1">
                 <span className="text-game-secondary text-sm flex items-center gap-1"><Gem size={14}/>ジェム報酬</span>

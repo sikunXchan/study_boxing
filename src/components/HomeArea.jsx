@@ -484,7 +484,7 @@ export default function HomeArea({ stats, inventory, setInventory, equippedItems
                       
                       {/* Define flags for render */}
                       {(() => {
-                        const isGearCollection = item.type !== 'pet_entity' && ((item.upgradeLevel || 0) >= 4 || (item.awakened || 0) > 0);
+                        const isGearCollection = item.type !== 'pet_entity' && ((item.upgradeLevel || 0) >= 4 || (item.awakened || 0) > 0 || item.rarity === 'god');
                         const isPetCollection = item.type === 'pet_entity' && ((item.upgradeLevel || 0) >= 4 || (item.awakened || 0) > 0 || item.rarity === 'god');
                         
                         return (isGearCollection || isPetCollection) && (

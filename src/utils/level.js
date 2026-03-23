@@ -39,8 +39,8 @@ export const AVATAR_RANKS = [
   { id: 2, name: '見習い剣士', reqLevel: 5, reqAtk: 10000, icon: 'UserCheck' },
   { id: 3, name: '熟練の戦士', reqLevel: 10, reqAtk: 100000, icon: 'Swords' },
   { id: 4, name: '騎士', reqLevel: 20, reqAtk: 1000000, icon: 'Shield' },
-  { id: 5, name: 'ソードマスター', reqLevel: 40, reqAtk: 10000000, icon: 'Sword' },
-  { id: 6, name: '勇者', reqLevel: 80, reqAtk: 100000000, icon: 'Crown' }
+  { id: 5, name: 'ソードマスター', reqLevel: 40, reqAtk: 2000000, icon: 'Sword' },
+  { id: 6, name: '勇者', reqLevel: 80, reqAtk: 4000000, icon: 'Crown' }
 ];
 
 export const SKINS = [

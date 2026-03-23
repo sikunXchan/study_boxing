@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { Target, CheckCircle2, Plus, Bell, X, Flag, ChevronRight, Trash2, Gem as GemIcon, BookOpen, Dumbbell, Vault, Skull, HeartPulse, Zap, Ghost } from 'lucide-react';
+import { Target, CheckCircle2, Plus, Bell, X, Flag, ChevronRight, Trash2, Gem as GemIcon, BookOpen, Dumbbell, Vault, Skull, HeartPulse, Zap, Ghost, Coins } from 'lucide-react';
 import * as LucideIcons from 'lucide-react';
 import { useLocalStorage } from '../hooks/useLocalStorage';
 

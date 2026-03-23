@@ -29,8 +29,15 @@ export default function BattleArea({ stats, setStats, resources, setResources, i
   const expPerSec = coinsPerSec / 5;
 
   // Get currently equipped items for visual
-  const equippedWeapon = inventory.find(i => i.id === equippedItems.weapon);
-  const equippedArmor = inventory.find(i => i.id === equippedItems.armor);
+  const getEquipped = (type) => inventory.find(i => i.id === equippedItems[type]);
+  const equippedWeapon = getEquipped('weapon');
+  const equippedArmor = getEquipped('armor');
+  const equippedNecklace = getEquipped('necklace');
+  const equippedGloves = getEquipped('gloves');
+  const equippedBelt = getEquipped('belt');
+  const equippedBoots = getEquipped('boots');
+  const equippedCollar = getEquipped('collar');
+  const equippedToy = getEquipped('toy');
 
   const getRarityColor = (rarity) => {
     switch (rarity) {
@@ -141,31 +148,89 @@ export default function BattleArea({ stats, setStats, resources, setResources, i
         <div className="absolute inset-0 opacity-20 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI4IiBoZWlnaHQ9IjgiPgo8cmVjdCB3aWR0aD0iOCIgaGVpZ2h0PSI4IiBmaWxsPSIjMWYyOTM3Ij48L3JlY3Q+CjxwYXRoIGQ9Ik0wLDBMODwsOFpNOCwwTDAsOFoiIHN0cm9rZT0iIzM3NDE1MSIgc3Ryb2tlLXdpZHRoPSIxIj48L3BhdGg+Cjwvc3ZnPg==')]"></div>
         <div className="absolute bottom-0 w-full h-1/3 bg-gradient-to-t from-black to-transparent"></div>
 
-        {/* Player Character */}
+        {/* Player Character Container */}
         <div className="absolute left-8 bottom-8 flex flex-col items-center">
           <div className={`relative ${isActive ? 'animate-bounce' : ''}`}>
+             
+             {/* Character Base */}
              <div className="w-12 h-12 bg-gray-800 rounded-full flex items-center justify-center border-2 border-game-primary shadow-[0_0_15px_rgba(16,185,129,0.5)] z-10">
                <LucideIcons.User size={24} className="text-game-primary" />
              </div>
-             {/* Equipped Weapon Overlay */}
+
+             {/* Armor (Back/Body) overlay */}
+             {equippedArmor && (
+               <div className="absolute inset-0 flex items-center justify-center opacity-40 z-0 scale-125 pointer-events-none">
+                 {renderIcon(equippedArmor.iconName, getRarityColor(equippedArmor.rarity))}
+               </div>
+             )}
+
+             {/* Weapon Overlay */}
              {equippedWeapon && (
-               <div className={`absolute -right-6 top-0 w-10 h-10 ${isActive ? 'animate-spin-slow' : ''}`}>
+               <div className={`absolute -right-8 top-1 w-10 h-10 z-20 ${isActive ? 'animate-spin-slow' : ''}`}>
                  {renderIcon(equippedWeapon.iconName, getRarityColor(equippedWeapon.rarity))}
                </div>
              )}
-             {/* Equipped Armor overlay */}
-             {equippedArmor && (
-               <div className="absolute -left-4 bottom-0 w-8 h-8 opacity-80">
-                 {renderIcon(equippedArmor.iconName, getRarityColor(equippedArmor.rarity))}
+             
+             {/* Necklace Overlay (Top Center) */}
+             {equippedNecklace && (
+               <div className="absolute -top-3 left-1/2 transform -translate-x-1/2 w-6 h-6 z-20 opacity-90 animate-pulse">
+                 {renderIcon(equippedNecklace.iconName, getRarityColor(equippedNecklace.rarity))}
                </div>
+             )}
+
+             {/* Gloves Overlay (Sides) */}
+             {equippedGloves && (
+               <>
+                 <div className={`absolute -left-3 top-4 w-5 h-5 z-20 opacity-80 ${isActive ? 'animate-bounce' : ''}`}>
+                   {renderIcon(equippedGloves.iconName, getRarityColor(equippedGloves.rarity))}
+                 </div>
+                 <div className={`absolute -right-3 top-4 w-5 h-5 z-20 opacity-80 ${isActive ? 'animate-bounce' : ''}`}>
+                   {renderIcon(equippedGloves.iconName, getRarityColor(equippedGloves.rarity))}
+                 </div>
+               </>
+             )}
+
+             {/* Belt Overlay (Bottom Center) */}
+             {equippedBelt && (
+               <div className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 w-6 h-6 z-20 opacity-90">
+                 {renderIcon(equippedBelt.iconName, getRarityColor(equippedBelt.rarity))}
+               </div>
+             )}
+
+             {/* Boots Overlay (Bottom corners) */}
+             {equippedBoots && (
+               <>
+                 <div className={`absolute -bottom-4 -left-2 w-5 h-5 z-0 opacity-80 ${isActive ? 'animate-bounce' : ''}`}>
+                   {renderIcon(equippedBoots.iconName, getRarityColor(equippedBoots.rarity))}
+                 </div>
+                 <div className={`absolute -bottom-4 -right-2 w-5 h-5 z-0 opacity-80 ${isActive ? 'animate-bounce' : ''}`}>
+                   {renderIcon(equippedBoots.iconName, getRarityColor(equippedBoots.rarity))}
+                 </div>
+               </>
              )}
           </div>
         </div>
 
-        {/* Active Pet */}
+        {/* Active Pet Container */}
         {activePet && (
-          <div className={`absolute left-20 bottom-16 w-8 h-8 ${isActive ? 'animate-float' : ''}`}>
-            {renderIcon(activePet.iconName, getRarityColor(activePet.rarity))}
+          <div className={`absolute left-24 bottom-16 w-8 h-8 z-10 ${isActive ? 'animate-float' : ''}`}>
+            <div className="relative w-full h-full">
+               {/* Pet Base */}
+               {renderIcon(activePet.iconName, getRarityColor(activePet.rarity))}
+               
+               {/* Pet Collar */}
+               {equippedCollar && (
+                 <div className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 w-5 h-5 z-20 opacity-90">
+                   {renderIcon(equippedCollar.iconName, getRarityColor(equippedCollar.rarity))}
+                 </div>
+               )}
+               {/* Pet Toy */}
+               {equippedToy && (
+                 <div className={`absolute -top-3 -right-3 w-5 h-5 z-20 opacity-80 ${isActive ? 'animate-spin-slow' : ''}`}>
+                   {renderIcon(equippedToy.iconName, getRarityColor(equippedToy.rarity))}
+                 </div>
+               )}
+            </div>
           </div>
         )}
 

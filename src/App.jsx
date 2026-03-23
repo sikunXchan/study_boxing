@@ -5,6 +5,7 @@ import BottomNavigation from './components/BottomNavigation';
 import HomeArea from './components/HomeArea';
 import GuildArea from './components/GuildArea';
 import ShopArea from './components/ShopArea';
+import BattleArea from './components/BattleArea';
 import { useLocalStorage } from './hooks/useLocalStorage';
 import { calculateLevelData } from './utils/level';
 import { runMigration } from './utils/saveMigration';
@@ -79,6 +80,7 @@ function App() {
       case 'home': return <HomeArea stats={stats} inventory={inventory} setInventory={setInventory} equippedItems={equippedItems} setEquippedItems={setEquippedItems} />;
       case 'guild': return <GuildArea setStats={setStats} setResources={setResources} inventory={inventory} setInventory={setInventory} equippedItems={equippedItems} />;
       case 'shop': return <ShopArea resources={resources} setResources={setResources} setInventory={setInventory} />;
+      case 'battle': return <BattleArea stats={stats} setStats={setStats} resources={resources} setResources={setResources} inventory={inventory} equippedItems={equippedItems} />;
       default: return <HomeArea stats={stats} inventory={inventory} setInventory={setInventory} equippedItems={equippedItems} setEquippedItems={setEquippedItems} />;
     }
   };

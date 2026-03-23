@@ -1,10 +1,11 @@
-import { Home, ShieldAlert, ShoppingBag } from 'lucide-react';
+import { Home, ShieldAlert, ShoppingBag, Swords } from 'lucide-react';
 
 export default function BottomNavigation({ activeTab, setActiveTab }) {
   const tabs = [
     { id: 'home', label: '装備', icon: Home },
     { id: 'guild', label: 'ギルド', icon: ShieldAlert },
     { id: 'shop', label: 'ショップ', icon: ShoppingBag },
+    { id: 'battle', label: '集中', icon: Swords },
   ];
 
   return (

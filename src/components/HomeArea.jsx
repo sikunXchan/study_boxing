@@ -147,33 +147,33 @@ export default function HomeArea({ stats, setStats, inventory, setInventory, equ
   return (
     <div className="p-4 flex flex-col items-center h-full space-y-6 animate-in fade-in zoom-in duration-300 relative">
       
-      {/* Notification Tooltip */}
-      <div className="absolute top-8 pointer-events-none text-game-primary font-bold text-[10px] animate-bounce bg-game-surface border border-game-primary/30 px-3 py-1 rounded-full shadow-neon z-30">
-        ↓ アバターをタップしてクラスチェンジ！ ↓
-      </div>
+      {/* Avatar Management Button */}
+      <button 
+        onClick={() => setShowAvatarModal(true)}
+        className="absolute top-4 left-4 bg-game-surface border border-game-primary/30 p-2 rounded-lg text-game-primary hover:bg-game-primary/10 transition-all flex items-center gap-2 font-bold text-xs z-20"
+      >
+        <User size={16} /> アバター管理
+      </button>
 
       {/* Dynamic Avatar & Pet Header */}
       <div className="flex items-center justify-center gap-6 mt-8 shrink-0">
         
-        {/* Player Avatar (Now Clickable) */}
-        <button 
-          onClick={() => setShowAvatarModal(true)}
-          className="relative w-32 h-32 cursor-pointer outline-none active:scale-95 transition-transform group"
-        >
+        {/* Player Avatar */}
+        <div className="relative w-32 h-32 group">
           {/* Reincarnation Aura */}
           {reincarnationCount > 0 && (
             <div className="absolute inset-0 bg-yellow-500/30 rounded-full blur-2xl animate-pulse"></div>
           )}
-          <div className="absolute inset-0 bg-game-primary/20 rounded-full blur-xl animate-pulse group-hover:bg-game-primary/40 transition-colors"></div>
+          <div className="absolute inset-0 bg-game-primary/20 rounded-full blur-xl animate-pulse"></div>
           <div className={`relative w-full h-full rounded-full border-4 shadow-neon flex items-center justify-center overflow-hidden bg-gradient-to-b from-game-surface to-[#111827] 
-            ${reincarnationCount > 0 ? 'border-yellow-400 group-hover:border-white' : 'border-game-primary group-hover:border-white transition-colors'}`}>
-            {renderIcon(displayIconName, `!w-[70px] !h-[70px] ${reincarnationCount > 0 ? 'text-yellow-400 drop-shadow-[0_0_10px_rgba(250,204,21,0.8)]' : 'text-game-primary group-hover:text-white transition-colors'}`)}
+            ${reincarnationCount > 0 ? 'border-yellow-400' : 'border-game-primary'}`}>
+            {renderIcon(displayIconName, `!w-[70px] !h-[70px] ${reincarnationCount > 0 ? 'text-yellow-400 drop-shadow-[0_0_10px_rgba(250,204,21,0.8)]' : 'text-game-primary'}`)}
           </div>
           <div className={`absolute -bottom-4 left-1/2 transform -translate-x-1/2 bg-game-bg border px-4 py-1 rounded-full text-xs font-bold shadow-neon whitespace-nowrap flex items-center gap-1
-            ${reincarnationCount > 0 ? 'border-yellow-400 text-yellow-400' : 'border-game-primary text-game-primary group-hover:text-white group-hover:border-white transition-colors'}`}>
+            ${reincarnationCount > 0 ? 'border-yellow-400 text-yellow-400' : 'border-game-primary text-game-primary'}`}>
             <ChevronUp size={14} /> Lv.{currentLevel} {displayName}
           </div>
-        </button>
+        </div>
         
         {/* Pet Avatar */}
         <div className="relative w-20 h-20 mt-4 flex flex-col items-center">
@@ -502,7 +502,7 @@ export default function HomeArea({ stats, setStats, inventory, setInventory, equ
                   {displayName}
                 </h2>
                 <div className="text-[10px] text-gray-400 font-bold flex flex-col items-center">
-                  <span>Lv.{currentLevel} / ATK: {(stats.atk + bonusATK).toLocaleString()}</span>
+                  <span>Lv.{currentLevel} / 最終ATK: {finalATK.toLocaleString()}</span>
                   {reincarnationCount > 0 && <span className="text-yellow-400 mt-1">転生ボーナス: 全ステータス x{reincarnationCount + 1}</span>}
                 </div>
              </div>

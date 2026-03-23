@@ -204,19 +204,22 @@ export default function GuildArea({ setStats, setResources, inventory, setInvent
 
   const dropRateText = activePassives.includes('golden_spirit') ? '25%' : '10%';
 
+  // Defense Result Overlay state
+  const [defenseResult, setDefenseResult] = useState(null); // { type: 'victory' | 'defeat', name: string, coins?: number, gems?: number }
+  const [upgradeToast, setUpgradeToast] = useState(null);
+
   // --- Handlers for Facilities ---
   const handleUpgradeFacility = (facilityId) => {
     const currentLv = facilities[facilityId] || 0;
     const cost = Math.floor(1000 * Math.pow(1.5, currentLv));
-    setResources(prev => {
-      if (prev.coins >= cost) {
-        setFacilities(f => ({ ...f, [facilityId]: currentLv + 1 }));
-        return { ...prev, coins: prev.coins - cost };
-      } else {
-        alert('コインが足りません！');
-        return prev;
-      }
-    });
+    
+    if (resources.coins >= cost) {
+      setFacilities(f => ({ ...f, [facilityId]: currentLv + 1 }));
+      setResources(prev => ({ ...prev, coins: prev.coins - cost }));
+    } else {
+      setUpgradeToast('コインが足りません！');
+      setTimeout(() => setUpgradeToast(null), 2000);
+    }
   };
 
   // --- Handlers for Defense Battle ---
@@ -240,12 +243,22 @@ export default function GuildArea({ setStats, setResources, inventory, setInvent
         const damage = Math.floor(h.maxHp * 0.3); // 30% damage
         const nextHp = h.currentHp - damage;
         if (nextHp <= 0) {
-           alert(`【${h.name}】の誘惑を完全に断ち切った！\n報酬としてジェムと大金を手に入れました！`);
+           const rewardCoins = 2000 * h.level;
+           const rewardGems = 10 * h.level;
+           
            setResources(r => ({
               ...r,
-              coins: r.coins + 2000 * h.level,
-              gems: r.gems + 10 * h.level
+              coins: r.coins + rewardCoins,
+              gems: r.gems + rewardGems
            }));
+           
+           setDefenseResult({ 
+             type: 'victory', 
+             name: h.name, 
+             coins: rewardCoins, 
+             gems: rewardGems 
+           });
+           
            return { ...h, level: h.level + 1, maxHp: h.maxHp + 50, currentHp: h.maxHp + 50, streak: h.streak + 1 };
         }
         return { ...h, currentHp: nextHp, streak: h.streak + 1 };
@@ -257,11 +270,17 @@ export default function GuildArea({ setStats, setResources, inventory, setInvent
   const handleHabitYielded = (habitId) => {
     setBadHabits(prev => prev.map(h => {
       if (h.id === habitId) {
-        alert(`無念...【${h.name}】の誘惑に負けてしまった。\nペナルティとしてコインを500失い、ボスのHPが回復しました。`);
         setResources(r => ({
            ...r,
            coins: Math.max(0, r.coins - 500)
         }));
+        
+        setDefenseResult({ 
+          type: 'defeat', 
+          name: h.name,
+          penalty: 500
+        });
+        
         return { ...h, streak: 0, currentHp: Math.min(h.maxHp, h.currentHp + Math.floor(h.maxHp * 0.2)) };
       }
       return h;
@@ -673,6 +692,68 @@ export default function GuildArea({ setStats, setResources, inventory, setInvent
           >
             一緒に帰る
           </button>
+        </div>
+      )}
+
+      {/* Defense Result Overlay */}
+      {defenseResult && (
+        <div className="fixed inset-0 z-[300] flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/80 backdrop-blur-md animate-in fade-in duration-300"></div>
+          <div className="glass-panel p-8 w-full max-w-sm border-purple-500/50 relative z-10 animate-in zoom-in slide-in-from-bottom-8 duration-500 flex flex-col items-center text-center">
+            <div className={`w-20 h-20 rounded-full flex items-center justify-center mb-6 shadow-neon border-2 ${defenseResult.type === 'victory' ? 'bg-emerald-500/20 border-emerald-500 text-emerald-400' : 'bg-red-500/20 border-red-500 text-red-500'}`}>
+               {defenseResult.type === 'victory' ? <CheckCircle2 size={40} /> : <Skull size={40} />}
+            </div>
+            
+            <h2 className={`text-2xl font-black mb-2 tracking-tight ${defenseResult.type === 'victory' ? 'text-emerald-400' : 'text-red-500'}`}>
+              {defenseResult.type === 'victory' ? 'EVIL HABIT PURGED!' : 'DEFEATED BY TEMPTATION...'}
+            </h2>
+            
+            <p className="text-gray-400 text-sm mb-6">
+              {defenseResult.type === 'victory' 
+                ? `【${defenseResult.name}】の誘惑に打ち勝ちました！素晴らしい自己管理能力です。` 
+                : `【${defenseResult.name}】の誘惑に負けてしまいました。次は絶対に勝ちましょう！`}
+            </p>
+
+            {defenseResult.type === 'victory' ? (
+              <div className="grid grid-cols-2 gap-4 w-full mb-8">
+                <div className="bg-[#111827] border border-game-surface p-4 rounded-xl flex flex-col items-center">
+                  <Coins className="text-[#fbbf24] mb-1" size={24} />
+                  <span className="text-xs text-game-muted font-bold">COINS</span>
+                  <span className="text-lg font-black text-white">+{defenseResult.coins.toLocaleString()}</span>
+                </div>
+                <div className="bg-[#111827] border border-game-surface p-4 rounded-xl flex flex-col items-center">
+                  <GemIcon className="text-game-accent mb-1" size={24} />
+                  <span className="text-xs text-game-muted font-bold">GEMS</span>
+                  <span className="text-lg font-black text-white">+{defenseResult.gems.toLocaleString()}</span>
+                </div>
+              </div>
+            ) : (
+              <div className="bg-red-500/10 border border-red-500/30 p-4 rounded-xl w-full mb-8 flex flex-col items-center">
+                <span className="text-xs text-red-400 font-bold mb-1">PENALTY</span>
+                <span className="text-lg font-black text-red-500 flex items-center gap-1">
+                  <Coins size={18} /> -{defenseResult.penalty} COINS
+                </span>
+                <p className="text-[10px] text-gray-500 mt-2">ボスのHPが回復してしまいました。</p>
+              </div>
+            )}
+
+            <button 
+              onClick={() => setDefenseResult(null)}
+              className={`w-full py-4 text-[#111827] font-black rounded-xl shadow-neon active:scale-95 transition-all ${defenseResult.type === 'victory' ? 'bg-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.5)]' : 'bg-red-500 shadow-[0_0_15px_rgba(239,68,68,0.5)]'}`}
+            >
+              ギルドに戻る
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Upgrade Toast */}
+      {upgradeToast && (
+        <div className="fixed bottom-24 left-1/2 transform -translate-x-1/2 z-[200] animate-in slide-in-from-bottom-4 duration-300">
+          <div className="bg-red-500 text-white px-6 py-3 rounded-full shadow-lg font-bold text-sm tracking-wider flex items-center gap-2">
+            <X size={18} className="bg-white/20 rounded-full" />
+            {upgradeToast}
+          </div>
         </div>
       )}
 

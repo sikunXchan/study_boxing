@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
-import { Play, Square, Sword, Shield, Clock, Coins, Star, Skull, Ghost, Zap } from 'lucide-react';
+import { Play, Square, Sword, Shield, Clock, Coins, Star, Skull, Ghost, Zap, AlertTriangle, ChevronUp } from 'lucide-react';
 import * as LucideIcons from 'lucide-react';
 import { calculateLevelData, calculateMultiplier, AVATAR_RANKS, SKINS } from '../utils/level';
 import { calculateTotalStats } from '../utils/statCalculator';
@@ -13,6 +13,7 @@ export default function BattleArea({ stats, setStats, resources, setResources, i
   const [accumulatedCoins, setAccumulatedCoins] = useState(0);
   const [accumulatedExp, setAccumulatedExp] = useState(0);
   const [hitEffects, setHitEffects] = useState([]);
+  const [rewardResult, setRewardResult] = useState(null); // { type: 'complete' | 'retreat', coins: number, exp: number }
   const hitIdCounter = useRef(0);
 
   // Compute stats
@@ -61,8 +62,6 @@ export default function BattleArea({ stats, setStats, resources, setResources, i
     return <IconComponent className={className} size={32} />;
   };
 
-
-
   const handleStart = () => {
     setIsActive(true);
   };
@@ -73,8 +72,7 @@ export default function BattleArea({ stats, setStats, resources, setResources, i
     const earnedCoins = Math.floor(accumulatedCoins * 0.2);
     const earnedExp = Math.floor(accumulatedExp * 0.2);
     distributeRewards(earnedCoins, earnedExp);
-    resetTimer();
-    alert(`途中撤退しました... ペナルティとして獲得量の20%のみ持ち帰ります。\n獲得コイン: ${earnedCoins}\n獲得EXP: ${earnedExp}`);
+    setRewardResult({ type: 'retreat', coins: earnedCoins, exp: earnedExp });
   };
 
   const handleComplete = () => {
@@ -82,8 +80,7 @@ export default function BattleArea({ stats, setStats, resources, setResources, i
     const earnedCoins = Math.floor(accumulatedCoins);
     const earnedExp = Math.floor(accumulatedExp);
     distributeRewards(earnedCoins, earnedExp);
-    resetTimer();
-    alert(`集中完了！お疲れ様でした！！\n獲得コイン: ${earnedCoins}\n獲得EXP: ${earnedExp}`);
+    setRewardResult({ type: 'complete', coins: earnedCoins, exp: earnedExp });
   };
 
   const distributeRewards = (coins, exp) => {
@@ -125,7 +122,7 @@ export default function BattleArea({ stats, setStats, resources, setResources, i
           const newHit = {
             id: hitIdCounter.current++,
             x: 60 + Math.random() * 30,
-            y: 20 + Math.random() * 60,
+            y: 30 + Math.random() * 40,
             damage: Math.floor(finalATK * (0.8 + Math.random() * 0.4))
           };
           setHitEffects(prev => [...prev.slice(-4), newHit]);
@@ -136,17 +133,15 @@ export default function BattleArea({ stats, setStats, resources, setResources, i
       clearInterval(interval);
     }
     return () => clearInterval(interval);
-  }, [isActive, timeLeft, coinsPerSec, expPerSec, finalATK, handleComplete]);
+  }, [isActive, timeLeft, coinsPerSec, expPerSec, finalATK]);
 
   return (
-    <div className="p-4 flex flex-col items-center h-full animate-in fade-in duration-300">
+    <div className="p-4 flex flex-col items-center h-full animate-in fade-in duration-300 relative">
       <h2 className="text-lg font-black text-game-accent tracking-widest uppercase flex items-center gap-2 mb-2">
         <Sword size={20} /> Auto Battle Focus <Sword size={20} />
       </h2>
-      <p className="text-[10px] text-gray-400 text-center mb-6">
-        スマホを触らずに集中する時間。<br/>
-        あなたのATKとHPの合計値が高いほど、時間内に多くの敵を倒し報酬が増えます。<br/>
-        <span className="text-red-400">※途中で止めた場合は報酬が20%に激減します</span>
+      <p className="text-[10px] text-game-muted font-bold mb-6 text-center max-w-xs">
+        集中して敵をなぎ倒しましょう！自分のATKが高いほど、時間内に多くの報酬を獲得できます。
       </p>
 
       {/* Battle Scene */}
@@ -219,7 +214,6 @@ export default function BattleArea({ stats, setStats, resources, setResources, i
           </div>
         </div>
 
-        {/* Active Pet Container */}
         {/* Active Pet Container */}
         {activePet && (
           <div className={`absolute left-24 bottom-16 w-8 h-8 z-10 ${isActive ? 'animate-float' : ''}`}>
@@ -310,6 +304,49 @@ export default function BattleArea({ stats, setStats, resources, setResources, i
           </button>
         )}
       </div>
+
+       {/* Reward Result Overlay */}
+       {rewardResult && (
+         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+           <div className="absolute inset-0 bg-black/80 backdrop-blur-md animate-in fade-in duration-300"></div>
+           <div className="glass-panel p-8 w-full max-w-sm border-game-primary/50 relative z-10 animate-in zoom-in slide-in-from-bottom-8 duration-500 flex flex-col items-center text-center">
+             <div className={`w-20 h-20 rounded-full flex items-center justify-center mb-6 shadow-neon border-2 ${rewardResult.type === 'complete' ? 'bg-game-primary/20 border-game-primary text-game-primary' : 'bg-red-500/20 border-red-500 text-red-400'}`}>
+                {rewardResult.type === 'complete' ? <Zap size={40} /> : <AlertTriangle size={40} />}
+             </div>
+             
+             <h2 className={`text-2xl font-black mb-2 tracking-tight ${rewardResult.type === 'complete' ? 'text-game-primary' : 'text-red-400'}`}>
+               {rewardResult.type === 'complete' ? 'MISSION COMPLETE!' : 'RETREATED...'}
+             </h2>
+             
+             <p className="text-gray-400 text-sm mb-6 text-xs lg:text-sm">
+               {rewardResult.type === 'complete' ? '素晴らしい集中力でした。お疲れ様です！' : 'やむを得ず撤退しました。次回は完走を目指しましょう！'}
+             </p>
+
+             <div className="grid grid-cols-2 gap-4 w-full mb-8">
+               <div className="bg-[#111827] border border-game-surface p-4 rounded-xl flex flex-col items-center">
+                 <Coins className="text-[#fbbf24] mb-1" size={24} />
+                 <span className="text-xs text-game-muted font-bold">COINS</span>
+                 <span className="text-lg font-black text-white">+{rewardResult.coins.toLocaleString()}</span>
+               </div>
+               <div className="bg-[#111827] border border-game-surface p-4 rounded-xl flex flex-col items-center">
+                 <Star className="text-game-primary mb-1" size={24} />
+                 <span className="text-xs text-game-muted font-bold">TOTAL EXP</span>
+                 <span className="text-lg font-black text-white">+{rewardResult.exp.toLocaleString()}</span>
+               </div>
+             </div>
+
+             <button 
+               onClick={() => {
+                 setRewardResult(null);
+                 resetTimer();
+               }}
+               className={`w-full py-4 text-black font-black rounded-xl shadow-neon active:scale-95 transition-all ${rewardResult.type === 'complete' ? 'bg-game-primary' : 'bg-red-400'}`}
+             >
+               ベース画面へ
+             </button>
+           </div>
+         </div>
+       )}
     </div>
   );
 }

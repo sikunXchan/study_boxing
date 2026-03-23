@@ -182,7 +182,7 @@ export default function BattleArea({ stats, setStats, resources, setResources, i
           <div 
             key={hit.id} 
             className="absolute text-red-500 font-black text-xs animate-damage-float drop-shadow-md z-20 flex items-center"
-            style={{ left: \`\${hit.x}%\`, top: \`\${hit.y}%\` }}
+            style={{ left: `${hit.x}%`, top: `${hit.y}%` }}
           >
             <Zap size={10} className="mr-0.5" />{hit.damage.toLocaleString()}
           </div>

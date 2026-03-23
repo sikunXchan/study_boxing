@@ -172,3 +172,43 @@
 ::-webkit-scrollbar-thumb:hover {
   background: #4b5563;
 }
+
+@keyframes float-anim {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-5px); }
+}
+
+.animate-float {
+  animation: float-anim 2s ease-in-out infinite;
+}
+
+@keyframes spin-slow {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.animate-spin-slow {
+  animation: spin-slow 4s linear infinite;
+}
+
+@keyframes slide-left {
+  0% { transform: translateX(100%); opacity: 0; }
+  10% { opacity: 1; }
+  80% { opacity: 1; }
+  100% { transform: translateX(-250%); opacity: 0; }
+}
+
+.animate-slide-left {
+  animation: slide-left 5s linear infinite;
+}
+
+@keyframes damage-float {
+  0% { transform: translateY(0) scale(0.5); opacity: 0; }
+  20% { transform: translateY(-10px) scale(1.2); opacity: 1; }
+  80% { transform: translateY(-20px) scale(1); opacity: 0.8; }
+  100% { transform: translateY(-30px) scale(0.8); opacity: 0; }
+}
+
+.animate-damage-float {
+  animation: damage-float 1s ease-out forwards;
+}

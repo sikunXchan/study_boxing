@@ -3,7 +3,7 @@ import { Target, CheckCircle2, Plus, Bell, X, Flag, ChevronRight, Trash2, Gem as
 import * as LucideIcons from 'lucide-react';
 import { useLocalStorage } from '../hooks/useLocalStorage';
 
-export default function GuildArea({ setStats, setResources, inventory, setInventory, equippedItems, facilities = {}, setFacilities, badHabits = [], setBadHabits }) {
+export default function GuildArea({ resources, setStats, setResources, inventory, setInventory, equippedItems, facilities = {}, setFacilities, badHabits = [], setBadHabits }) {
   const [isCreating, setIsCreating] = useState(false);
   const [newQuestTitle, setNewQuestTitle] = useState('');
   const [newQuestReward, setNewQuestReward] = useState('atk');

@@ -77,11 +77,11 @@ function App() {
 
   const renderContent = () => {
     switch (activeTab) {
-      case 'home': return <HomeArea stats={stats} inventory={inventory} setInventory={setInventory} equippedItems={equippedItems} setEquippedItems={setEquippedItems} />;
-      case 'guild': return <GuildArea setStats={setStats} setResources={setResources} inventory={inventory} setInventory={setInventory} equippedItems={equippedItems} />;
+      case 'home': return <HomeArea stats={stats} inventory={inventory} setInventory={setInventory} equippedItems={equippedItems} setEquippedItems={setEquippedItems} facilities={facilities} />;
+      case 'guild': return <GuildArea setStats={setStats} setResources={setResources} inventory={inventory} setInventory={setInventory} equippedItems={equippedItems} facilities={facilities} setFacilities={setFacilities} badHabits={badHabits} setBadHabits={setBadHabits} />;
       case 'shop': return <ShopArea resources={resources} setResources={setResources} setInventory={setInventory} />;
-      case 'battle': return <BattleArea stats={stats} setStats={setStats} resources={resources} setResources={setResources} inventory={inventory} equippedItems={equippedItems} />;
-      default: return <HomeArea stats={stats} inventory={inventory} setInventory={setInventory} equippedItems={equippedItems} setEquippedItems={setEquippedItems} />;
+      case 'battle': return <BattleArea stats={stats} setStats={setStats} resources={resources} setResources={setResources} inventory={inventory} equippedItems={equippedItems} facilities={facilities} />;
+      default: return <HomeArea stats={stats} inventory={inventory} setInventory={setInventory} equippedItems={equippedItems} setEquippedItems={setEquippedItems} facilities={facilities} />;
     }
   };
 

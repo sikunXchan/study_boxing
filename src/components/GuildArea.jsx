@@ -1,9 +1,8 @@
-import { useState, useRef, useEffect } from 'react';
-import { Target, CheckCircle2, Plus, Bell, X, Flag, ChevronRight, Trash2, Gem as GemIcon } from 'lucide-react';
+import { Target, CheckCircle2, Plus, Bell, X, Flag, ChevronRight, Trash2, Gem as GemIcon, BookOpen, Dumbbell, Vault, Skull, HeartPulse, Zap, Ghost } from 'lucide-react';
 import * as LucideIcons from 'lucide-react';
 import { useLocalStorage } from '../hooks/useLocalStorage';
 
-export default function GuildArea({ setStats, setResources, inventory, setInventory, equippedItems }) {
+export default function GuildArea({ setStats, setResources, inventory, setInventory, equippedItems, facilities = {}, setFacilities, badHabits = [], setBadHabits }) {
   const [isCreating, setIsCreating] = useState(false);
   const [newQuestTitle, setNewQuestTitle] = useState('');
   const [newQuestReward, setNewQuestReward] = useState('atk');
@@ -23,7 +22,11 @@ export default function GuildArea({ setStats, setResources, inventory, setInvent
   // Swipe to delete state
   const [swipedQuestId, setSwipedQuestId] = useState(null);
   const touchStartX = useRef(0);
-  
+
+  const [activeGuildTab, setActiveGuildTab] = useState('quests'); // 'quests', 'facilities', 'defense'
+
+  // Defense Battle State
+  const [newHabitName, setNewHabitName] = useState('');
   const getRarityStyle = (rarity) => {
     switch (rarity) {
       case 'legendary': return 'text-game-accent drop-shadow-[0_0_15px_rgba(251,191,36,0.8)] border-game-accent';
@@ -101,7 +104,9 @@ export default function GuildArea({ setStats, setResources, inventory, setInvent
         expMultiplier *= 0.5;
       }
       
-      const finalExp = Math.max(1, Math.floor(quest.rewardExp * expMultiplier));
+      // Apply Facility Bonus for EXP
+      const libraryBonus = 1 + (facilities.library || 0) * 0.05;
+      const finalExp = Math.max(1, Math.floor(quest.rewardExp * expMultiplier * libraryBonus));
 
       if (quest.type === 'atk') {
         setStats(prev => ({ ...prev, atk: prev.atk + finalExp }));
@@ -122,9 +127,12 @@ export default function GuildArea({ setStats, setResources, inventory, setInvent
         setTimeout(() => setGemNotification(null), 3000);
       }
 
+      // Apply Facility Bonus for Coins
+      const vaultBonus = 1 + (facilities.vault || 0) * 0.05;
+
       setResources(prev => ({ 
         ...prev, 
-        coins: prev.coins + quest.rewardCoins,
+        coins: prev.coins + Math.floor(quest.rewardCoins * vaultBonus),
         gems: prev.gems + bonusGems
       }));
 
@@ -195,30 +203,124 @@ export default function GuildArea({ setStats, setResources, inventory, setInvent
 
   const dropRateText = activePassives.includes('golden_spirit') ? '25%' : '10%';
 
+  // --- Handlers for Facilities ---
+  const handleUpgradeFacility = (facilityId) => {
+    const currentLv = facilities[facilityId] || 0;
+    const cost = Math.floor(1000 * Math.pow(1.5, currentLv));
+    setResources(prev => {
+      if (prev.coins >= cost) {
+        setFacilities(f => ({ ...f, [facilityId]: currentLv + 1 }));
+        return { ...prev, coins: prev.coins - cost };
+      } else {
+        alert('コインが足りません！');
+        return prev;
+      }
+    });
+  };
+
+  // --- Handlers for Defense Battle ---
+  const handleAddHabit = (e) => {
+    e.preventDefault();
+    if (!newHabitName.trim()) return;
+    setBadHabits(prev => [...prev, {
+      id: Date.now().toString(),
+      name: newHabitName,
+      level: 1,
+      maxHp: 100,
+      currentHp: 100,
+      streak: 0
+    }]);
+    setNewHabitName('');
+  };
+
+  const handleHabitEndured = (habitId) => {
+    setBadHabits(prev => prev.map(h => {
+      if (h.id === habitId) {
+        const damage = Math.floor(h.maxHp * 0.3); // 30% damage
+        const nextHp = h.currentHp - damage;
+        if (nextHp <= 0) {
+           alert(`【${h.name}】の誘惑を完全に断ち切った！\n報酬としてジェムと大金を手に入れました！`);
+           setResources(r => ({
+              ...r,
+              coins: r.coins + 2000 * h.level,
+              gems: r.gems + 10 * h.level
+           }));
+           return { ...h, level: h.level + 1, maxHp: h.maxHp + 50, currentHp: h.maxHp + 50, streak: h.streak + 1 };
+        }
+        return { ...h, currentHp: nextHp, streak: h.streak + 1 };
+      }
+      return h;
+    }));
+  };
+
+  const handleHabitYielded = (habitId) => {
+    setBadHabits(prev => prev.map(h => {
+      if (h.id === habitId) {
+        alert(`無念...【${h.name}】の誘惑に負けてしまった。\nペナルティとしてコインを500失い、ボスのHPが回復しました。`);
+        setResources(r => ({
+           ...r,
+           coins: Math.max(0, r.coins - 500)
+        }));
+        return { ...h, streak: 0, currentHp: Math.min(h.maxHp, h.currentHp + Math.floor(h.maxHp * 0.2)) };
+      }
+      return h;
+    }));
+  };
+
+  const handleDeleteHabit = (habitId) => {
+    setBadHabits(prev => prev.filter(h => h.id !== habitId));
+  };
+
 
 
   return (
     <div className="p-4 h-full flex flex-col animate-in slide-in-from-right duration-300 relative">
       
-      <div className="flex items-center justify-between mb-4 pt-2">
+      <div className="flex items-center justify-between mb-2 pt-2">
         <h2 className="text-xl font-black italic tracking-wider filter drop-shadow-[0_0_8px_rgba(255,255,255,0.8)]">
           GUILD HALL
         </h2>
         
+        {activeGuildTab === 'quests' && (
+          <button 
+            onClick={() => setIsPetHuntMode(!isPetHuntMode)}
+            className={`px-3 py-1.5 rounded-full text-[10px] font-bold border transition-all flex items-center gap-1.5 shadow-md hover:scale-105 ${
+              isPetHuntMode 
+                ? 'bg-game-accent/20 border-game-accent text-game-accent shadow-[0_0_10px_rgba(251,191,36,0.3)] animate-pulse' 
+                : 'bg-[#111827] border-game-surface text-gray-500 hover:border-game-muted'
+            }`}
+          >
+            <Target size={12} />
+            {isPetHuntMode ? 'ペット探索モード (ON)' : 'ペット探索モード (OFF)'}
+          </button>
+        )}
+      </div>
+
+      {/* TABS Navigation */}
+      <div className="flex bg-[#111827] rounded-lg p-1 mb-4 border border-game-surface">
         <button 
-          onClick={() => setIsPetHuntMode(!isPetHuntMode)}
-          className={`px-3 py-1.5 rounded-full text-[10px] font-bold border transition-all flex items-center gap-1.5 shadow-md hover:scale-105 ${
-            isPetHuntMode 
-              ? 'bg-game-accent/20 border-game-accent text-game-accent shadow-[0_0_10px_rgba(251,191,36,0.3)] animate-pulse' 
-              : 'bg-[#111827] border-game-surface text-gray-500 hover:border-game-muted'
-          }`}
+          onClick={() => setActiveGuildTab('quests')}
+          className={`flex-1 py-1.5 text-[10px] font-bold rounded-md transition-all flex items-center justify-center gap-1 ${activeGuildTab === 'quests' ? 'bg-game-surface text-white shadow-sm' : 'text-gray-500'}`}
         >
-          <Target size={12} />
-          {isPetHuntMode ? 'ペット探索モード (ON)' : 'ペット探索モード (OFF)'}
+          <Flag size={12}/> クエスト
+        </button>
+        <button 
+          onClick={() => setActiveGuildTab('facilities')}
+          className={`flex-1 py-1.5 text-[10px] font-bold rounded-md transition-all flex items-center justify-center gap-1 ${activeGuildTab === 'facilities' ? 'bg-game-surface text-white shadow-sm' : 'text-gray-500'}`}
+        >
+          <BookOpen size={12}/> 施設投資
+        </button>
+        <button 
+          onClick={() => setActiveGuildTab('defense')}
+          className={`flex-1 py-1.5 text-[10px] font-bold rounded-md transition-all flex items-center justify-center gap-1 ${activeGuildTab === 'defense' ? 'bg-game-surface text-white shadow-sm' : 'text-gray-500'}`}
+        >
+          <Skull size={12}/> 防衛戦
         </button>
       </div>
+
       <div className="flex-1 overflow-y-auto space-y-4 pb-20 pr-1 custom-scrollbar">
-        
+        {activeGuildTab === 'quests' && (
+          <>
             {!isCreating ? (
               <button 
                 onClick={() => setIsCreating(true)}
@@ -358,7 +460,153 @@ export default function GuildArea({ setStats, setResources, inventory, setInvent
                 </div>
               );
             })}
+          </>
+        )}
 
+        {/* --- FACILITIES TAB --- */}
+        {activeGuildTab === 'facilities' && (
+          <div className="space-y-4 animate-in fade-in duration-300">
+             <div className="glass-panel p-4 flex items-center gap-4">
+               <div className="bg-blue-500/20 p-3 rounded-lg border border-blue-500/50">
+                 <BookOpen size={24} className="text-blue-400" />
+               </div>
+               <div className="flex-1">
+                 <div className="flex justify-between items-start mb-1">
+                   <h3 className="font-bold text-white text-sm">図書館 <span className="text-xs text-blue-400">Lv.{facilities.library || 0}</span></h3>
+                 </div>
+                 <p className="text-[10px] text-gray-400 mb-2">手動クエストの【獲得EXP】が +{(facilities.library || 0) * 5}% 増加</p>
+                 <button 
+                   onClick={() => handleUpgradeFacility('library')}
+                   className="w-full py-1.5 bg-[#111827] border border-blue-500/30 text-blue-400 rounded text-xs font-bold hover:bg-blue-500/10 flex justify-center items-center gap-1"
+                 >
+                   <ChevronRight size={14}/> 改築する (💰 {Math.floor(1000 * Math.pow(1.5, facilities.library || 0)).toLocaleString()})
+                 </button>
+               </div>
+             </div>
+
+             <div className="glass-panel p-4 flex items-center gap-4">
+               <div className="bg-red-500/20 p-3 rounded-lg border border-red-500/50">
+                 <Dumbbell size={24} className="text-red-400" />
+               </div>
+               <div className="flex-1">
+                 <div className="flex justify-between items-start mb-1">
+                   <h3 className="font-bold text-white text-sm">訓練所 <span className="text-xs text-red-400">Lv.{facilities.training || 0}</span></h3>
+                 </div>
+                 <p className="text-[10px] text-gray-400 mb-2">基礎ATKが +{(facilities.training || 0) * 5}% 増加</p>
+                 <button 
+                   onClick={() => handleUpgradeFacility('training')}
+                   className="w-full py-1.5 bg-[#111827] border border-red-500/30 text-red-400 rounded text-xs font-bold hover:bg-red-500/10 flex justify-center items-center gap-1"
+                 >
+                   <ChevronRight size={14}/> 改築する (💰 {Math.floor(1000 * Math.pow(1.5, facilities.training || 0)).toLocaleString()})
+                 </button>
+               </div>
+             </div>
+
+             <div className="glass-panel p-4 flex items-center gap-4">
+               <div className="bg-yellow-500/20 p-3 rounded-lg border border-yellow-500/50">
+                 <Vault size={24} className="text-yellow-400" />
+               </div>
+               <div className="flex-1">
+                 <div className="flex justify-between items-start mb-1">
+                   <h3 className="font-bold text-white text-sm">金庫 <span className="text-xs text-yellow-400">Lv.{facilities.vault || 0}</span></h3>
+                 </div>
+                 <p className="text-[10px] text-gray-400 mb-2">手動クエストの【獲得コイン】が +{(facilities.vault || 0) * 5}% 増加</p>
+                 <button 
+                   onClick={() => handleUpgradeFacility('vault')}
+                   className="w-full py-1.5 bg-[#111827] border border-yellow-500/30 text-yellow-400 rounded text-xs font-bold hover:bg-yellow-500/10 flex justify-center items-center gap-1"
+                 >
+                   <ChevronRight size={14}/> 改築する (💰 {Math.floor(1000 * Math.pow(1.5, facilities.vault || 0)).toLocaleString()})
+                 </button>
+               </div>
+             </div>
+             
+             <p className="text-center text-[10px] text-gray-500 mt-4 leading-relaxed">
+               施設をレベルアップすると、恒久的な恩恵を受けられます。<br/>
+               コストは指数関数的に増加しますが、ガチャと違い確実に強くなります。
+             </p>
+          </div>
+        )}
+
+        {/* --- DEFENSE TAB --- */}
+        {activeGuildTab === 'defense' && (
+          <div className="space-y-4 animate-in fade-in duration-300">
+             <form onSubmit={handleAddHabit} className="glass-panel p-4 border-purple-500/30">
+                <h3 className="font-bold text-sm mb-2 flex items-center gap-2"><Skull size={14} className="text-purple-400" /> 悪習慣を登録（ボス追加）</h3>
+                <div className="flex gap-2">
+                  <input 
+                    type="text" 
+                    value={newHabitName}
+                    onChange={(e) => setNewHabitName(e.target.value)}
+                    placeholder="例: 夜食を食べる、SNSダラダラ" 
+                    className="flex-1 bg-[#111827] border border-game-surface text-white p-2 rounded text-xs focus:outline-none focus:border-purple-500"
+                  />
+                  <button type="submit" className="bg-purple-600 outline-none text-white px-3 font-bold text-xs rounded hover:bg-purple-500 transition-colors">
+                    追加
+                  </button>
+                </div>
+             </form>
+
+             {badHabits.length === 0 ? (
+               <p className="text-center text-game-muted text-xs mt-8">登録された悪習慣はありません。<br/>倒すべき誘惑を追加してください。</p>
+             ) : (
+               badHabits.map(habit => {
+                 const hpPercent = Math.max(0, Math.min(100, (habit.currentHp / habit.maxHp) * 100));
+                 return (
+                   <div key={habit.id} className="relative overflow-hidden rounded-xl">
+                      <div className="absolute inset-y-0 right-0 w-20 flex items-center justify-center bg-red-600 text-white">
+                        <button onClick={() => handleDeleteHabit(habit.id)} className="w-full h-full flex flex-col items-center justify-center gap-1 active:bg-red-700">
+                          <Trash2 size={24} />
+                          <span className="text-[10px] font-bold">削除</span>
+                        </button>
+                      </div>
+
+                      <div 
+                        onTouchStart={handleTouchStart}
+                        onTouchEnd={(e) => handleTouchEnd(e, habit.id)}
+                        style={{ transform: swipedQuestId === habit.id ? 'translateX(-80px)' : 'translateX(0)' }}
+                        className="glass-panel p-4 relative overflow-hidden transition-transform duration-300 z-10 border-purple-500/20"
+                      >
+                         <div className="flex justify-between items-start mb-2">
+                            <div>
+                               <h3 className="font-bold text-sm text-white flex items-center gap-2">
+                                  <Ghost size={16} className="text-purple-400" /> {habit.name}
+                               </h3>
+                               <span className="text-[10px] text-gray-400 tracking-wider">Lv.{habit.level} BOSS / STREAK: {habit.streak}日</span>
+                            </div>
+                         </div>
+                         
+                         {/* HP Bar */}
+                         <div className="mb-3">
+                            <div className="flex justify-between text-[9px] font-bold mb-1">
+                               <span className="text-purple-400">BOSS HP</span>
+                               <span className="text-white">{habit.currentHp} / {habit.maxHp}</span>
+                            </div>
+                            <div className="w-full h-2.5 bg-gray-800 rounded-full overflow-hidden border border-gray-700">
+                               <div className="h-full bg-gradient-to-r from-purple-600 to-red-500 transition-all duration-500" style={{ width: `${hpPercent}%` }}></div>
+                            </div>
+                         </div>
+
+                         <div className="flex gap-2 mt-4">
+                            <button 
+                              onClick={() => handleHabitEndured(habit.id)}
+                              className="flex-1 py-3 bg-emerald-500/20 border border-emerald-500 text-emerald-400 rounded font-bold text-xs flex justify-center items-center gap-1 active:scale-95 transition-all shadow-[0_0_10px_rgba(16,185,129,0.3)]"
+                            >
+                              <Zap size={14}/> 我慢できた！ (攻撃)
+                            </button>
+                            <button 
+                              onClick={() => handleHabitYielded(habit.id)}
+                              className="flex-1 py-3 bg-red-500/10 border border-red-500/50 text-red-500 rounded font-bold text-xs flex justify-center items-center gap-1 active:scale-95 transition-all"
+                            >
+                              <HeartPulse size={14}/> 負けた… (申告)
+                            </button>
+                         </div>
+                      </div>
+                   </div>
+                 );
+               })
+             )}
+          </div>
+        )}
 
       </div>
       

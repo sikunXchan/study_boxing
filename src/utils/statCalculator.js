@@ -1,4 +1,4 @@
-export function calculateTotalStats(inventory, equippedItems) {
+export function calculateTotalStats(inventory, equippedItems, facilities = { training: 0 }) {
     let baseBonusATK = 0;
     let baseBonusHP = 0;
     const passives = new Set();
@@ -82,7 +82,8 @@ export function calculateTotalStats(inventory, equippedItems) {
       }
     });
 
-    const totalATK = baseBonusATK + passiveBonusATK;
+    const trainingMultiplier = 1 + (facilities.training || 0) * 0.05;
+    const totalATK = Math.floor((baseBonusATK + passiveBonusATK) * trainingMultiplier);
     const totalHP = baseBonusHP + passiveBonusHP;
 
     return { 

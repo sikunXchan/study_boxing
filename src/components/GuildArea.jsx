@@ -117,8 +117,8 @@ export default function GuildArea({ setStats, setResources, inventory, setInvent
 
       let bonusGems = 0;
       if (Math.random() < dropRate) {
-        bonusGems = 20;
-        setGemNotification({ id: Date.now(), amount: 20 });
+        bonusGems = 600;
+        setGemNotification({ id: Date.now(), amount: 600 });
         setTimeout(() => setGemNotification(null), 3000);
       }
 

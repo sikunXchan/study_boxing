@@ -139,7 +139,7 @@ export default function HomeArea({ stats, inventory, setInventory, equippedItems
       const isMax = (item.upgradeLevel || 0) >= 4;
       const isCollectionItem = (isMax || (item.awakened || 0) > 0 || item.rarity === 'god');
 
-      if (isCollectionItem && !equippedItemIds.has(item.id)) {
+      if (isCollectionItem) {
          const upgradeFactor = Math.pow(isGear ? 1.5 : 1.1, item.upgradeLevel || 0);
          const awakeFactor = 1 + (item.awakened || 0) * (isGear ? 0.2 : 0.1);
          passiveBonusATK += Math.floor((item.bonusATK || 0) * upgradeFactor * awakeFactor * 0.1);
@@ -326,7 +326,7 @@ export default function HomeArea({ stats, inventory, setInventory, equippedItems
                   )}
                   {/* Slot Label rendering -> check if awakened first, else max, else level */}
                   {item && (
-                     <div className={`absolute -bottom-2 -right-2 bg-[#111827] border border-current text-[9px] font-bold px-1.5 py-0.5 rounded shadow-md truncate max-w-[50px]
+                     <div className={`absolute -bottom-2 -right-2 bg-[#111827] border border-current text-[9px] font-bold px-1.5 py-0.5 rounded shadow-md
                        ${(item.awakened || 0) > 0 ? 'text-game-accent animate-pulse shadow-[0_0_8px_rgba(251,191,36,0.6)]' : ''}
                      `}>
                        {(item.awakened || 0) > 0 ? `覚醒 Lv.${item.awakened}` : (item.upgradeLevel >= 4) ? 'MAX' : `Lv.${(item.upgradeLevel || 0) + 1}`}
@@ -446,7 +446,7 @@ export default function HomeArea({ stats, inventory, setInventory, equippedItems
                      <div className={`w-14 h-14 rounded-lg flex items-center justify-center shrink-0 border relative ${getRarityStyle(item.rarity)}`}>
                        {renderIcon(item.iconName, getIconAccentColor(item.rarity))}
                        {/* Level Badge in Bottom-Right */}
-                       <div className={`absolute -bottom-1 -right-1 bg-[#111827] border border-current text-[8px] font-bold px-1 py-0.5 rounded shadow-md truncate max-w-[45px]
+                       <div className={`absolute -bottom-1 -right-1 bg-[#111827] border border-current text-[8px] font-bold px-1.5 py-0.5 rounded shadow-md
                          ${(item.awakened || 0) > 0 ? 'text-game-accent animate-pulse shadow-[0_0_8px_rgba(251,191,36,0.6)]' : ''}
                        `}>
                          {(item.awakened || 0) > 0 ? `覚醒 Lv.${item.awakened}` : (item.upgradeLevel >= 4) ? 'MAX' : `Lv.${(item.upgradeLevel || 0) + 1}`}
@@ -485,9 +485,9 @@ export default function HomeArea({ stats, inventory, setInventory, equippedItems
                       {/* Define flags for render */}
                       {(() => {
                         const isGearCollection = item.type !== 'pet_entity' && ((item.upgradeLevel || 0) >= 4 || (item.awakened || 0) > 0);
-                        const isPetCollection = item.type === 'pet_entity' && item.rarity === 'god' && (item.awakened || 0) > 0;
+                        const isPetCollection = item.type === 'pet_entity' && ((item.upgradeLevel || 0) >= 4 || (item.awakened || 0) > 0 || item.rarity === 'god');
                         
-                        return !isEquipped && (isGearCollection || isPetCollection) && (
+                        return (isGearCollection || isPetCollection) && (
                           <div className="mt-2 p-1.5 bg-game-accent/10 border border-game-accent/30 rounded-md">
                             <span className="text-[10px] font-bold text-game-accent flex items-center gap-1">
                                <Check size={12} /> コレクションボーナス発動中!

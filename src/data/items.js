@@ -55,9 +55,14 @@ export const GACHA_POOL = [
 
   // --- BOOTS ---
   { label: 'すり減った上履き', type: 'boots', iconName: 'Grip', rarity: 'normal', bonusATK: 0, bonusHP: 50, weight: 22 },
+  { label: '通学用ローファー', type: 'boots', iconName: 'Briefcase', rarity: 'normal', bonusATK: 25, bonusHP: 25, weight: 20 },
   { label: '陸上シューズ', type: 'boots', iconName: 'FastForward', rarity: 'uncommon', bonusATK: 0, bonusHP: 250, weight: 15 },
+  { label: 'トレーニングシューズ', type: 'boots', iconName: 'Activity', rarity: 'uncommon', bonusATK: 125, bonusHP: 125, weight: 12 },
+  { label: '軽量スニーカー', type: 'boots', iconName: 'Wind', rarity: 'rare', bonusATK: 500, bonusHP: 500, weight: 12 },
   { label: 'プロボクサーシューズ', type: 'boots', iconName: 'TrendingUp', rarity: 'epic', bonusATK: 1000, bonusHP: 1000, weight: 7 },
+  { label: '強化コンバットブーツ', type: 'boots', iconName: 'Shield', rarity: 'epic', bonusATK: 0, bonusHP: 2000, weight: 6 },
   { label: 'ヘルメスの靴', type: 'boots', iconName: 'Zap', rarity: 'legendary', bonusATK: 1500, bonusHP: 1500, weight: 2.5 },
+  { label: '天駆ける瞬足', type: 'boots', iconName: 'Feather', rarity: 'legendary', bonusATK: 3000, bonusHP: 0, weight: 1.5 },
 
   // === PET GEAR ===
   { label: '布の首輪', type: 'collar', iconName: 'CircleDashed', rarity: 'normal', bonusATK: 25, bonusHP: 25, weight: 18 },

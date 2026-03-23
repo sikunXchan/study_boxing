@@ -42,6 +42,9 @@ function App() {
     gems: 0
   });
 
+  const [facilities, setFacilities] = useLocalStorage('gemini_survivor_facilities', { library: 0, training: 0, vault: 0 });
+  const [badHabits, setBadHabits] = useLocalStorage('gemini_survivor_bad_habits', []);
+
   // Visual Save Indicator logic
   const [isSaving, setIsSaving] = useState(false);
 

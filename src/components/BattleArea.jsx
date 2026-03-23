@@ -56,31 +56,7 @@ export default function BattleArea({ stats, setStats, resources, setResources, i
     return <IconComponent className={className} size={32} />;
   };
 
-  useEffect(() => {
-    let interval = null;
-    if (isActive && timeLeft > 0) {
-      interval = setInterval(() => {
-        setTimeLeft(time => time - 1);
-        setAccumulatedCoins(c => c + coinsPerSec);
-        setAccumulatedExp(e => e + expPerSec);
 
-        // Visual hit effect
-        if (Math.random() > 0.4) {
-          const newHit = {
-            id: hitIdCounter.current++,
-            x: 60 + Math.random() * 30, // Right side
-            y: 20 + Math.random() * 60, // Vertical spread
-            damage: Math.floor(finalATK * (0.8 + Math.random() * 0.4))
-          };
-          setHitEffects(prev => [...prev.slice(-4), newHit]);
-        }
-      }, 1000);
-    } else if (timeLeft === 0 && isActive) {
-      handleComplete();
-      clearInterval(interval);
-    }
-    return () => clearInterval(interval);
-  }, [isActive, timeLeft, coinsPerSec, expPerSec, finalATK]);
 
   const handleStart = () => {
     setIsActive(true);
@@ -130,6 +106,32 @@ export default function BattleArea({ stats, setStats, resources, setResources, i
     const s = (seconds % 60).toString().padStart(2, '0');
     return `${m}:${s}`;
   };
+
+  useEffect(() => {
+    let interval = null;
+    if (isActive && timeLeft > 0) {
+      interval = setInterval(() => {
+        setTimeLeft(time => time - 1);
+        setAccumulatedCoins(c => c + coinsPerSec);
+        setAccumulatedExp(e => e + expPerSec);
+
+        // Visual hit effect
+        if (Math.random() > 0.4) {
+          const newHit = {
+            id: hitIdCounter.current++,
+            x: 60 + Math.random() * 30,
+            y: 20 + Math.random() * 60,
+            damage: Math.floor(finalATK * (0.8 + Math.random() * 0.4))
+          };
+          setHitEffects(prev => [...prev.slice(-4), newHit]);
+        }
+      }, 1000);
+    } else if (timeLeft === 0 && isActive) {
+      handleComplete();
+      clearInterval(interval);
+    }
+    return () => clearInterval(interval);
+  }, [isActive, timeLeft, coinsPerSec, expPerSec, finalATK, handleComplete]);
 
   return (
     <div className="p-4 flex flex-col items-center h-full animate-in fade-in duration-300">

@@ -142,8 +142,8 @@ export default function HomeArea({ stats, inventory, setInventory, equippedItems
       if (isCollectionItem) {
          const upgradeFactor = Math.pow(isGear ? 1.5 : 1.1, item.upgradeLevel || 0);
          const awakeFactor = 1 + (item.awakened || 0) * (isGear ? 0.2 : 0.1);
-         passiveBonusATK += Math.floor((item.bonusATK || 0) * upgradeFactor * awakeFactor * 0.1);
-         passiveBonusHP += Math.floor((item.bonusHP || 0) * upgradeFactor * awakeFactor * 0.1);
+         passiveBonusATK += Math.floor((item.bonusATK || 0) * upgradeFactor * awakeFactor);
+         passiveBonusHP += Math.floor((item.bonusHP || 0) * upgradeFactor * awakeFactor);
       }
     });
     

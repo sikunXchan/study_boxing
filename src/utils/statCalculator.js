@@ -1,4 +1,4 @@
-export function calculateTotalStats(inventory, equippedItems, facilities = { training: 0 }) {
+export function calculateTotalStats(inventory, equippedItems, facilities = { training: 0 }, reincarnationCount = 0) {
     let baseBonusATK = 0;
     let baseBonusHP = 0;
     const passives = new Set();
@@ -83,8 +83,10 @@ export function calculateTotalStats(inventory, equippedItems, facilities = { tra
     });
 
     const trainingMultiplier = 1 + (facilities.training || 0) * 0.05;
-    const totalATK = Math.floor((baseBonusATK + passiveBonusATK) * trainingMultiplier);
-    const totalHP = baseBonusHP + passiveBonusHP;
+    const reincarnationMultiplier = 1 + (reincarnationCount || 0);
+    
+    const totalATK = Math.floor((baseBonusATK + passiveBonusATK) * trainingMultiplier * reincarnationMultiplier);
+    const totalHP = Math.floor((baseBonusHP + passiveBonusHP) * reincarnationMultiplier);
 
     return { 
       bonusATK: totalATK, 

@@ -1,12 +1,13 @@
 import { useState, useMemo } from 'react';
-import { User, Activity, Sword, ChevronUp, X, Check, Dog, Sparkles } from 'lucide-react';
+import { User, Activity, Sword, ChevronUp, X, Check, Dog, Sparkles, AlertTriangle, Lock, Unlock } from 'lucide-react';
 import * as LucideIcons from 'lucide-react';
-import { calculateLevelData, calculateMultiplier } from '../utils/level';
+import { calculateLevelData, calculateMultiplier, AVATAR_RANKS, SKINS } from '../utils/level';
 import { calculateTotalStats } from '../utils/statCalculator';
 
-export default function HomeArea({ stats, inventory, setInventory, equippedItems, setEquippedItems }) {
+export default function HomeArea({ stats, setStats, inventory, setInventory, equippedItems, setEquippedItems, facilities, playerRank, setPlayerRank, activeSkin, setActiveSkin, reincarnationCount, setReincarnationCount }) {
   const [selectedSlot, setSelectedSlot] = useState(null);
   const [showEvolutionAnim, setShowEvolutionAnim] = useState(false);
+  const [showAvatarModal, setShowAvatarModal] = useState(false);
 
   // Configuration for the 8 equipment slots (6 Player + 2 Pet)
   const slotsConfig = [
@@ -86,7 +87,7 @@ export default function HomeArea({ stats, inventory, setInventory, equippedItems
   }
 
   // Calculate Equipment Bonuses and Passives
-  const { bonusATK, bonusHP, activePassives, activePet, rawPassiveATK, rawPassiveHP } = useMemo(() => calculateTotalStats(inventory, equippedItems), [equippedItems, inventory]);
+  const { bonusATK, bonusHP, activePassives, activePet, rawPassiveATK, rawPassiveHP } = useMemo(() => calculateTotalStats(inventory, equippedItems, facilities, reincarnationCount), [equippedItems, inventory, facilities, reincarnationCount]);
 
   // Level is strictly based on Base Stats (EXP from quests) to prevent infinite leveling loops via equipment changing.
   const baseExp = stats.atk + stats.hp;
@@ -95,6 +96,36 @@ export default function HomeArea({ stats, inventory, setInventory, equippedItems
   const multiplier = useMemo(() => calculateMultiplier(currentLevel), [currentLevel]);
   const finalATK = Math.floor((stats.atk + bonusATK) * multiplier);
   const finalHP = Math.floor((stats.hp + bonusHP) * multiplier);
+  
+  // Avatar Management Data
+  const currentRankObj = AVATAR_RANKS.find(r => r.id === playerRank) || AVATAR_RANKS[0];
+  const activeSkinObj = activeSkin ? SKINS.find(s => s.id === activeSkin) : null;
+  const displayIconName = activeSkinObj ? activeSkinObj.icon : currentRankObj.icon;
+  const displayName = activeSkinObj ? activeSkinObj.name : currentRankObj.name;
+  
+  const handleReincarnate = () => {
+    if (confirm('【警告】転生するとレベル・ステータス・装備品・進行中クラスが全てリセットされます（お金と施設と悪習慣リストは残ります）。\n\n代わりに全てのステータス永続倍率が＋100%(実質ベース倍)になります。\n本当に転生しますか？')) {
+      setStats({ atk: 0, hp: 0 });
+      setInventory([]);
+      setEquippedItems({ weapon: null, armor: null, necklace: null, gloves: null, belt: null, boots: null, collar: null, toy: null, pet_entity: null });
+      setPlayerRank(1);
+      setReincarnationCount(prev => (prev || 0) + 1);
+      setActiveSkin(null);
+      setShowAvatarModal(false);
+    }
+  };
+
+  const handleClassChange = (nextRank) => {
+    if (currentLevel >= nextRank.reqLevel && finalATK >= nextRank.reqAtk) {
+      setShowAvatarModal(false);
+      setShowEvolutionAnim(true);
+      // Wait for animation to finish before applying rank
+      setTimeout(() => {
+        setPlayerRank(nextRank.id);
+        setTimeout(() => setShowEvolutionAnim(false), 2000);
+      }, 500);
+    }
+  };
 
   const handleEquip = (itemId) => {
     setEquippedItems(prev => ({ ...prev, [selectedSlot]: itemId }));
@@ -116,19 +147,33 @@ export default function HomeArea({ stats, inventory, setInventory, equippedItems
   return (
     <div className="p-4 flex flex-col items-center h-full space-y-6 animate-in fade-in zoom-in duration-300 relative">
       
+      {/* Notification Tooltip */}
+      <div className="absolute top-8 pointer-events-none text-game-primary font-bold text-[10px] animate-bounce bg-game-surface border border-game-primary/30 px-3 py-1 rounded-full shadow-neon z-30">
+        ↓ アバターをタップしてクラスチェンジ！ ↓
+      </div>
+
       {/* Dynamic Avatar & Pet Header */}
       <div className="flex items-center justify-center gap-6 mt-8 shrink-0">
         
-        {/* Player Avatar */}
-        <div className="relative w-32 h-32">
-          <div className="absolute inset-0 bg-game-primary/20 rounded-full blur-xl animate-pulse"></div>
-          <div className="relative bg-gradient-to-b from-game-surface to-[#111827] w-full h-full rounded-full border-4 border-game-primary shadow-neon flex items-center justify-center overflow-hidden">
-            <User size={70} className="text-game-primary" />
+        {/* Player Avatar (Now Clickable) */}
+        <button 
+          onClick={() => setShowAvatarModal(true)}
+          className="relative w-32 h-32 cursor-pointer outline-none active:scale-95 transition-transform group"
+        >
+          {/* Reincarnation Aura */}
+          {reincarnationCount > 0 && (
+            <div className="absolute inset-0 bg-yellow-500/30 rounded-full blur-2xl animate-pulse"></div>
+          )}
+          <div className="absolute inset-0 bg-game-primary/20 rounded-full blur-xl animate-pulse group-hover:bg-game-primary/40 transition-colors"></div>
+          <div className={`relative w-full h-full rounded-full border-4 shadow-neon flex items-center justify-center overflow-hidden bg-gradient-to-b from-game-surface to-[#111827] 
+            ${reincarnationCount > 0 ? 'border-yellow-400 group-hover:border-white' : 'border-game-primary group-hover:border-white transition-colors'}`}>
+            {renderIcon(displayIconName, `!w-[70px] !h-[70px] ${reincarnationCount > 0 ? 'text-yellow-400 drop-shadow-[0_0_10px_rgba(250,204,21,0.8)]' : 'text-game-primary group-hover:text-white transition-colors'}`)}
           </div>
-          <div className="absolute -bottom-4 left-1/2 transform -translate-x-1/2 bg-game-bg border border-game-primary px-4 py-1 rounded-full text-xs font-bold text-game-primary shadow-neon whitespace-nowrap flex items-center gap-1">
-            <ChevronUp size={14} /> Lv. {currentLevel} 生徒
+          <div className={`absolute -bottom-4 left-1/2 transform -translate-x-1/2 bg-game-bg border px-4 py-1 rounded-full text-xs font-bold shadow-neon whitespace-nowrap flex items-center gap-1
+            ${reincarnationCount > 0 ? 'border-yellow-400 text-yellow-400' : 'border-game-primary text-game-primary group-hover:text-white group-hover:border-white transition-colors'}`}>
+            <ChevronUp size={14} /> Lv.{currentLevel} {displayName}
           </div>
-        </div>
+        </button>
         
         {/* Pet Avatar */}
         <div className="relative w-20 h-20 mt-4 flex flex-col items-center">
@@ -431,6 +476,145 @@ export default function HomeArea({ stats, inventory, setInventory, equippedItems
           </div>
         </div>
       )}
+      {/* Avatar Management Modal */}
+      {showAvatarModal && (
+        <div className="absolute inset-x-0 bottom-0 top-0 bg-[#0d1424] z-50 flex flex-col animate-in slide-in-from-bottom duration-300">
+           {/* Top Bar */}
+           <div className="flex items-center justify-between p-4 bg-game-surface border-b border-game-primary/30 shrink-0">
+             <h3 className="font-bold text-lg text-game-primary flex items-center gap-2">
+               <User /> アバター管理
+             </h3>
+             <button onClick={() => setShowAvatarModal(false)} className="p-1 rounded-md bg-red-500/20 text-red-400 active:scale-95">
+               <X size={20} />
+             </button>
+           </div>
+           
+           <div className="flex-1 overflow-y-auto w-full max-w-sm mx-auto p-4 space-y-6 custom-scrollbar">
+             
+             {/* Current Avatar Header */}
+             <div className="glass-panel p-6 flex flex-col items-center relative overflow-hidden">
+                {reincarnationCount > 0 && <div className="absolute inset-0 bg-yellow-500/20 blur-xl animate-pulse pointer-events-none"></div>}
+                <div className={`w-24 h-24 rounded-full border-4 shadow-neon flex items-center justify-center mb-3 relative z-10
+                  ${reincarnationCount > 0 ? 'border-yellow-400 text-yellow-400 bg-yellow-500/10' : 'border-game-primary text-game-primary bg-[#111827]'}`}>
+                   {renderIcon(displayIconName, '!w-[50px] !h-[50px]')}
+                </div>
+                <h2 className={`font-black tracking-widest text-xl mb-1 ${reincarnationCount > 0 ? 'text-yellow-400' : 'text-game-primary'}`}>
+                  {displayName}
+                </h2>
+                <div className="text-[10px] text-gray-400 font-bold flex flex-col items-center">
+                  <span>Lv.{currentLevel} / ATK: {(stats.atk + bonusATK).toLocaleString()}</span>
+                  {reincarnationCount > 0 && <span className="text-yellow-400 mt-1">転生ボーナス: 全ステータス x{reincarnationCount + 1}</span>}
+                </div>
+             </div>
+
+             {/* Reincarnation Section */}
+             {currentLevel >= 100 && (
+               <div className="glass-panel p-5 border-yellow-500/50 relative overflow-hidden group">
+                 <div className="absolute inset-0 bg-gradient-to-r from-yellow-500/10 to-transparent pointer-events-none"></div>
+                 <h3 className="font-black text-yellow-400 mb-2 flex items-center gap-2">
+                   <InfinityIcon size={16} /> 転生 (Lv.100 特権)
+                 </h3>
+                 <p className="text-[10px] text-gray-300 mb-4 leading-relaxed">
+                   現在のレベルとステータス、装備品を全て初期化し、新たな生を受けます。<br/>
+                   <span className="text-yellow-400 font-bold">恩恵：以降のステータス(クエスト等)倍率が永遠に x{reincarnationCount + 2} になります。専用スキン「覚醒者」も解放。</span>
+                 </p>
+                 <button onClick={handleReincarnate} className="w-full py-3 bg-gradient-to-r from-yellow-500 to-orange-500 text-white font-black rounded-lg shadow-[0_0_15px_rgba(234,179,8,0.5)] active:scale-95 transition-all">
+                   転生する
+                 </button>
+               </div>
+             )}
+
+             {/* Evolution Tree */}
+             <div>
+               <h3 className="text-sm font-bold text-game-muted mb-3 flex items-center">
+                 <span className="w-full h-px bg-game-surface/80 mr-3"></span> クラスチェンジ <span className="w-full h-px bg-game-surface/80 ml-3"></span>
+               </h3>
+               <div className="space-y-3 relative before:absolute before:inset-y-0 before:left-[23px] before:w-0.5 before:bg-game-surface">
+                 {AVATAR_RANKS.map((rank, idx) => {
+                    const isUnlocked = playerRank >= rank.id;
+                    const isNext = playerRank === rank.id - 1;
+                    const canEvolve = isNext && currentLevel >= rank.reqLevel && finalATK >= rank.reqAtk;
+                    return (
+                      <div key={rank.id} className={`relative flex gap-4 p-3 rounded-lg border ${isUnlocked ? 'bg-game-primary/10 border-game-primary/30' : isNext ? 'bg-game-surface border-game-primary/50' : 'bg-transparent border-gray-800'}`}>
+                        {/* Node */}
+                        <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 border-2 z-10 transition-colors
+                          ${isUnlocked ? 'bg-game-primary border-game-primary text-game-bg shadow-[0_0_10px_rgba(16,185,129,0.5)]' : isNext ? 'bg-[#111827] border-game-primary text-game-primary' : 'bg-[#111827] border-gray-800 text-gray-700'}
+                        `}>
+                           {renderIcon(rank.icon, `w-5 h-5 ${!isUnlocked ? 'brightness-0 invert-[0.3] opacity-80 drop-shadow-md' : ''}`)}
+                        </div>
+                        {/* Content */}
+                        <div className="flex-1">
+                          <h4 className={`font-bold text-sm ${isUnlocked ? 'text-game-primary' : isNext ? 'text-white' : 'text-gray-600'}`}>{rank.name}</h4>
+                          {!isUnlocked && idx > 0 && (
+                            <div className="text-[9px] text-gray-500 mt-1">
+                              条件: Lv.{rank.reqLevel} 以上 / 最終ATK {rank.reqAtk.toLocaleString()} 以上
+                            </div>
+                          )}
+                          {isNext && (
+                            <button 
+                              onClick={() => handleClassChange(rank)}
+                              disabled={!canEvolve}
+                              className={`mt-2 w-full py-2 text-xs font-bold rounded flex items-center justify-center gap-1 transition-all ${
+                                canEvolve 
+                                 ? 'bg-game-primary text-black shadow-[0_0_10px_rgba(16,185,129,0.5)] active:scale-95' 
+                                 : 'bg-game-surface text-gray-500 disabled:opacity-50'
+                              }`}
+                            >
+                              {canEvolve ? <><Sparkles size={14} /> 進化する！</> : <><Lock size={14} /> 条件未達成</>}
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    )
+                 })}
+               </div>
+             </div>
+
+             {/* Skins */}
+             <div className="pb-10">
+               <h3 className="text-sm font-bold text-game-muted mb-3 flex items-center">
+                 <span className="w-full h-px bg-game-surface/80 mr-3"></span> 限定スキン <span className="w-full h-px bg-game-surface/80 ml-3"></span>
+               </h3>
+               <div className="grid grid-cols-2 gap-3">
+                 {/* Revert to default class */}
+                 <button 
+                   onClick={() => setActiveSkin(null)}
+                   className={`glass-panel p-3 flex flex-col items-center justify-center gap-2 border-2 transition-all ${!activeSkin ? 'border-game-primary bg-game-primary/10' : 'border-transparent'}`}
+                 >
+                   <User size={24} className={!activeSkin ? "text-game-primary" : "text-gray-500"} />
+                   <span className={`text-[10px] font-bold ${!activeSkin ? 'text-game-primary' : 'text-gray-400'}`}>デフォルト (クラス依存)</span>
+                 </button>
+
+                 {SKINS.map(skin => {
+                   const statsPayload = { atk: stats.atk + bonusATK, hp: stats.hp + bonusHP };
+                   const isUnlocked = skin.checkUnlock(statsPayload, currentLevel, reincarnationCount);
+                   const isEquipped = activeSkin === skin.id;
+                   return (
+                     <button 
+                       key={skin.id}
+                       disabled={!isUnlocked}
+                       onClick={() => setActiveSkin(skin.id)}
+                       className={`glass-panel p-3 flex flex-col items-center justify-center gap-2 border-2 transition-all relative overflow-hidden
+                         ${isEquipped ? 'border-game-accent bg-game-accent/10' : 'border-game-surface/50 hover:border-game-accent/50'}
+                         ${!isUnlocked ? 'opacity-50 grayscale cursor-not-allowed border-dashed' : ''}
+                       `}
+                     >
+                       {skin.id === 'awakened' && <div className="absolute inset-0 bg-yellow-500/10 pointer-events-none"></div>}
+                       {renderIcon(skin.icon, `w-6 h-6 ${isEquipped ? 'text-game-accent animate-pulse' : isUnlocked ? 'text-white' : 'text-gray-600'}`)}
+                       <span className={`text-[9px] font-bold text-center ${isEquipped ? 'text-game-accent' : isUnlocked ? 'text-gray-300' : 'text-gray-600'}`}>
+                         {skin.name}
+                       </span>
+                       {!isUnlocked && <span className="text-[8px] text-red-400 mt-1 flex items-center gap-1"><Lock size={8}/> {skin.condition}</span>}
+                       {isEquipped && <span className="text-[8px] bg-game-accent text-black px-1.5 py-0.5 rounded-sm absolute top-1 right-1 font-black">使用中</span>}
+                     </button>
+                   )
+                 })}
+               </div>
+             </div>
+           </div>
+        </div>
+      )}
+
       {/* Evolution Success Animation Overlay */}
       {showEvolutionAnim && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center pointer-events-none">

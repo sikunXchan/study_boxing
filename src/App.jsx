@@ -44,6 +44,11 @@ function App() {
 
   const [facilities, setFacilities] = useLocalStorage('gemini_survivor_facilities', { library: 0, training: 0, vault: 0 });
   const [badHabits, setBadHabits] = useLocalStorage('gemini_survivor_bad_habits', []);
+  
+  // Avatar & Reincarnation States
+  const [playerRank, setPlayerRank] = useLocalStorage('gemini_survivor_rank', 1);
+  const [activeSkin, setActiveSkin] = useLocalStorage('gemini_survivor_skin', null);
+  const [reincarnationCount, setReincarnationCount] = useLocalStorage('gemini_survivor_reincarnation', 0);
 
   // Visual Save Indicator logic
   const [isSaving, setIsSaving] = useState(false);
@@ -80,11 +85,11 @@ function App() {
 
   const renderContent = () => {
     switch (activeTab) {
-      case 'home': return <HomeArea stats={stats} inventory={inventory} setInventory={setInventory} equippedItems={equippedItems} setEquippedItems={setEquippedItems} facilities={facilities} />;
-      case 'guild': return <GuildArea setStats={setStats} setResources={setResources} inventory={inventory} setInventory={setInventory} equippedItems={equippedItems} facilities={facilities} setFacilities={setFacilities} badHabits={badHabits} setBadHabits={setBadHabits} />;
+      case 'home': return <HomeArea stats={stats} setStats={setStats} inventory={inventory} setInventory={setInventory} equippedItems={equippedItems} setEquippedItems={setEquippedItems} facilities={facilities} playerRank={playerRank} setPlayerRank={setPlayerRank} activeSkin={activeSkin} setActiveSkin={setActiveSkin} reincarnationCount={reincarnationCount} setReincarnationCount={setReincarnationCount} />;
+      case 'guild': return <GuildArea setStats={setStats} setResources={setResources} inventory={inventory} setInventory={setInventory} equippedItems={equippedItems} facilities={facilities} setFacilities={setFacilities} badHabits={badHabits} setBadHabits={setBadHabits} reincarnationCount={reincarnationCount} />;
       case 'shop': return <ShopArea resources={resources} setResources={setResources} setInventory={setInventory} />;
-      case 'battle': return <BattleArea stats={stats} setStats={setStats} resources={resources} setResources={setResources} inventory={inventory} equippedItems={equippedItems} facilities={facilities} />;
-      default: return <HomeArea stats={stats} inventory={inventory} setInventory={setInventory} equippedItems={equippedItems} setEquippedItems={setEquippedItems} facilities={facilities} />;
+      case 'battle': return <BattleArea stats={stats} setStats={setStats} resources={resources} setResources={setResources} inventory={inventory} equippedItems={equippedItems} facilities={facilities} reincarnationCount={reincarnationCount} activeSkin={activeSkin} playerRank={playerRank} />;
+      default: return <HomeArea stats={stats} setStats={setStats} inventory={inventory} setInventory={setInventory} equippedItems={equippedItems} setEquippedItems={setEquippedItems} facilities={facilities} playerRank={playerRank} setPlayerRank={setPlayerRank} activeSkin={activeSkin} setActiveSkin={setActiveSkin} reincarnationCount={reincarnationCount} setReincarnationCount={setReincarnationCount} />;
     }
   };
 

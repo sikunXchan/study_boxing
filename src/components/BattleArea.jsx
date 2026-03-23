@@ -1,13 +1,13 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
 import { Play, Square, Sword, Shield, Clock, Coins, Star, Skull, Ghost, Zap } from 'lucide-react';
 import * as LucideIcons from 'lucide-react';
-import { calculateLevelData, calculateMultiplier } from '../utils/level';
+import { calculateLevelData, calculateMultiplier, AVATAR_RANKS, SKINS } from '../utils/level';
 import { calculateTotalStats } from '../utils/statCalculator';
 
 // 30 minutes in seconds
 const DEFAULT_TIMER_SECONDS = 30 * 60;
 
-export default function BattleArea({ stats, setStats, resources, setResources, inventory, equippedItems }) {
+export default function BattleArea({ stats, setStats, resources, setResources, inventory, equippedItems, facilities, reincarnationCount, activeSkin, playerRank }) {
   const [timeLeft, setTimeLeft] = useState(DEFAULT_TIMER_SECONDS);
   const [isActive, setIsActive] = useState(false);
   const [accumulatedCoins, setAccumulatedCoins] = useState(0);
@@ -16,9 +16,14 @@ export default function BattleArea({ stats, setStats, resources, setResources, i
   const hitIdCounter = useRef(0);
 
   // Compute stats
-  const { bonusATK, bonusHP, activePet } = useMemo(() => calculateTotalStats(inventory, equippedItems), [equippedItems, inventory]);
+  const { bonusATK, bonusHP, activePet } = useMemo(() => calculateTotalStats(inventory, equippedItems, facilities, reincarnationCount), [equippedItems, inventory, facilities, reincarnationCount]);
   const baseExp = stats.atk + stats.hp;
   const { currentLevel } = useMemo(() => calculateLevelData(baseExp), [baseExp]);
+  
+  // Avatar Management Data
+  const currentRankObj = AVATAR_RANKS.find(r => r.id === playerRank) || AVATAR_RANKS[0];
+  const activeSkinObj = activeSkin ? SKINS.find(s => s.id === activeSkin) : null;
+  const displayIconName = activeSkinObj ? activeSkinObj.icon : currentRankObj.icon;
   const multiplier = useMemo(() => calculateMultiplier(currentLevel), [currentLevel]);
   const finalATK = Math.floor((stats.atk + bonusATK) * multiplier);
   const finalHP = Math.floor((stats.hp + bonusHP) * multiplier);
@@ -155,8 +160,9 @@ export default function BattleArea({ stats, setStats, resources, setResources, i
           <div className={`relative ${isActive ? 'animate-bounce' : ''}`}>
              
              {/* Character Base */}
-             <div className="w-12 h-12 bg-gray-800 rounded-full flex items-center justify-center border-2 border-game-primary shadow-[0_0_15px_rgba(16,185,129,0.5)] z-10">
-               <LucideIcons.User size={24} className="text-game-primary" />
+             <div className={`w-12 h-12 rounded-full flex items-center justify-center border-2 z-10 shadow-[0_0_15px_rgba(16,185,129,0.5)] 
+               ${reincarnationCount > 0 ? 'border-yellow-400 bg-yellow-500/10 shadow-[0_0_15px_rgba(250,204,21,0.5)]' : 'bg-[#111827] border-game-primary'}`}>
+               {renderIcon(displayIconName, `!w-[28px] !h-[28px] ${reincarnationCount > 0 ? 'text-yellow-400 drop-shadow-[0_0_8px_rgba(250,204,21,0.8)]' : 'text-game-primary'}`)}
              </div>
 
              {/* Armor (Back/Body) overlay */}
@@ -213,6 +219,7 @@ export default function BattleArea({ stats, setStats, resources, setResources, i
           </div>
         </div>
 
+        {/* Active Pet Container */}
         {/* Active Pet Container */}
         {activePet && (
           <div className={`absolute left-24 bottom-16 w-8 h-8 z-10 ${isActive ? 'animate-float' : ''}`}>

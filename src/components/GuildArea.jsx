@@ -240,7 +240,7 @@ export default function GuildArea({ resources, setStats, setResources, inventory
   const handleHabitEndured = (habitId) => {
     setBadHabits(prev => prev.map(h => {
       if (h.id === habitId) {
-        const damage = Math.floor(h.maxHp * 0.3); // 30% damage
+        const damage = 30; // Fixed damage per endure
         const nextHp = h.currentHp - damage;
         if (nextHp <= 0) {
            const rewardCoins = 2000 * h.level;
@@ -406,12 +406,20 @@ export default function GuildArea({ resources, setStats, setResources, inventory
                  huntPenalty = Math.floor(totalBeforePenalty * 0.5);
               }
               
-              const finalExp = Math.max(1, baseGain + passiveGain - huntPenalty);
+              // Apply Facility Bonus for EXP display
+              const libraryBonusDisplay = 1 + (facilities.library || 0) * 0.05;
+              const facilityExpGain = Math.floor((baseGain + passiveGain - huntPenalty) * (libraryBonusDisplay - 1));
+              const finalExp = Math.max(1, Math.floor((baseGain + passiveGain - huntPenalty) * libraryBonusDisplay));
+              
+              // Apply Facility Bonus for Coins display
+              const vaultBonusDisplay = 1 + (facilities.vault || 0) * 0.05;
+              const displayCoins = Math.floor(quest.rewardCoins * vaultBonusDisplay);
               
               // Construct Breakdown string
               let breakdownStr = `基本${baseGain}`;
               if (passiveGain > 0) breakdownStr += ` + ボーナス${passiveGain}`;
               if (huntPenalty > 0) breakdownStr += ` - 探索影響${huntPenalty}`;
+              if (facilityExpGain > 0) breakdownStr += ` + 図書館${facilityExpGain}`;
               
               let currentDropRateText = '10%';
               if (activePassives.includes('golden_spirit_15')) currentDropRateText = '15%';
@@ -452,7 +460,7 @@ export default function GuildArea({ resources, setStats, setResources, inventory
                               EXP +{finalExp} <span className="text-[9px] text-gray-500">({quest.type === 'atk' ? 'ATK' : 'HP'}成長 / {breakdownStr})</span>
                             </span>
                             <span className="text-[11px] text-gray-500">/</span>
-                            <span className="text-[11px] text-[#fbbf24] font-bold">💰 {quest.rewardCoins} コイン</span>
+                            <span className="text-[11px] text-[#fbbf24] font-bold">💰 {displayCoins} コイン{(facilities.vault || 0) > 0 ? ` (金庫+${(facilities.vault || 0) * 5}%)` : ''}</span>
                             <span className="text-[11px] text-gray-500">/</span>
                             <span className="text-[11px] text-game-accent">💎 {currentDropRateText}でジェム</span>
                             {isPetHuntMode && (

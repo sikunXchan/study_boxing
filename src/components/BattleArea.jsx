@@ -15,6 +15,7 @@ export default function BattleArea({ stats, setStats, resources, setResources, i
   const [hitEffects, setHitEffects] = useState([]);
   const [rewardResult, setRewardResult] = useState(null); // { type: 'complete' | 'retreat', coins: number, exp: number }
   const hitIdCounter = useRef(0);
+  const wakeLockRef = useRef(null);
 
   // Compute stats
   const { bonusATK, bonusHP, activePet } = useMemo(() => calculateTotalStats(inventory, equippedItems, facilities, reincarnationCount), [equippedItems, inventory, facilities, reincarnationCount]);
@@ -65,6 +66,53 @@ export default function BattleArea({ stats, setStats, resources, setResources, i
   const handleStart = () => {
     setIsActive(true);
   };
+
+  // Wake Lock API: prevent sleep during focus mode
+  useEffect(() => {
+    const acquireWakeLock = async () => {
+      if ('wakeLock' in navigator) {
+        try {
+          wakeLockRef.current = await navigator.wakeLock.request('screen');
+          console.log('[WakeLock] Screen wake lock acquired');
+          wakeLockRef.current.addEventListener('release', () => {
+            console.log('[WakeLock] Screen wake lock released');
+          });
+        } catch (err) {
+          console.warn('[WakeLock] Failed to acquire:', err.message);
+        }
+      }
+    };
+
+    const releaseWakeLock = async () => {
+      if (wakeLockRef.current) {
+        try {
+          await wakeLockRef.current.release();
+          wakeLockRef.current = null;
+        } catch (err) {
+          console.warn('[WakeLock] Failed to release:', err.message);
+        }
+      }
+    };
+
+    // Re-acquire wake lock when page becomes visible again
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible' && isActive) {
+        acquireWakeLock();
+      }
+    };
+
+    if (isActive) {
+      acquireWakeLock();
+      document.addEventListener('visibilitychange', handleVisibilityChange);
+    } else {
+      releaseWakeLock();
+    }
+
+    return () => {
+      releaseWakeLock();
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [isActive]);
 
   const handleRetreat = () => {
     setIsActive(false);

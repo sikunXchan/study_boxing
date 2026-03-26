@@ -359,7 +359,7 @@ export default function GuildArea({ resources, stats, setStats, setResources, in
     setEpicShatterIndex({ questId, childIndex });
 
     setTimeout(() => setEpicScreenFlash(false), 500);
-    setTimeout(() => setEpicDamageEffect(null), 1800);
+    setTimeout(() => setEpicDamageEffect(null), 3000);
     setTimeout(() => setEpicShatterIndex(null), 1000);
 
     // Update quest data

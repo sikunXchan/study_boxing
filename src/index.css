@@ -232,14 +232,15 @@
 
 @keyframes critical-hit-pop {
   0% { transform: translate(-50%, -50%) scale(0); opacity: 0; }
-  15% { transform: translate(-50%, -50%) scale(2.5); opacity: 1; }
+  10% { transform: translate(-50%, -50%) scale(2.2); opacity: 1; }
+  20% { transform: translate(-50%, -50%) scale(1.6); opacity: 1; }
   30% { transform: translate(-50%, -50%) scale(1.8); opacity: 1; }
-  50% { transform: translate(-50%, -50%) scale(2.0); opacity: 1; }
-  100% { transform: translate(-50%, -50%) scale(3.0) translateY(-50px); opacity: 0; }
+  65% { transform: translate(-50%, -50%) scale(1.8); opacity: 1; }
+  100% { transform: translate(-50%, -50%) scale(2.5) translateY(-40px); opacity: 0; }
 }
 
 .animate-critical-hit {
-  animation: critical-hit-pop 1.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation: critical-hit-pop 3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 @keyframes hp-shatter {

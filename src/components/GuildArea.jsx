@@ -1,9 +1,11 @@
-import { useState, useRef, useEffect } from 'react';
-import { Target, CheckCircle2, Plus, Bell, X, Flag, ChevronRight, Trash2, Gem as GemIcon, BookOpen, Dumbbell, Vault, Skull, HeartPulse, Zap, Ghost, Coins } from 'lucide-react';
+import { useState, useRef, useEffect, useMemo } from 'react';
+import { Target, CheckCircle2, Plus, Bell, X, Flag, ChevronRight, Trash2, Gem as GemIcon, BookOpen, Dumbbell, Vault, Skull, HeartPulse, Zap, Ghost, Coins, Swords, Crown, Trophy, Gift, Flame, Shield } from 'lucide-react';
 import * as LucideIcons from 'lucide-react';
 import { useLocalStorage } from '../hooks/useLocalStorage';
+import { calculateLevelData, calculateMultiplier } from '../utils/level';
+import { calculateTotalStats } from '../utils/statCalculator';
 
-export default function GuildArea({ resources, setStats, setResources, inventory, setInventory, equippedItems, facilities = {}, setFacilities, badHabits = [], setBadHabits }) {
+export default function GuildArea({ resources, stats, setStats, setResources, inventory, setInventory, equippedItems, facilities = {}, setFacilities, badHabits = [], setBadHabits, reincarnationCount }) {
   const [isCreating, setIsCreating] = useState(false);
   const [newQuestTitle, setNewQuestTitle] = useState('');
   const [newQuestReward, setNewQuestReward] = useState('atk');
@@ -24,7 +26,39 @@ export default function GuildArea({ resources, setStats, setResources, inventory
   const [swipedQuestId, setSwipedQuestId] = useState(null);
   const touchStartX = useRef(0);
 
-  const [activeGuildTab, setActiveGuildTab] = useState('quests'); // 'quests', 'facilities', 'defense'
+  const [activeGuildTab, setActiveGuildTab] = useState('quests'); // 'quests', 'epic', 'facilities', 'defense'
+
+  // === EPIC QUEST STATE ===
+  const [epicQuests, setEpicQuests] = useLocalStorage('gemini_survivor_epic_quests', []);
+  const [isCreatingEpic, setIsCreatingEpic] = useState(false);
+  const [newEpicTitle, setNewEpicTitle] = useState('');
+  const [newEpicChildren, setNewEpicChildren] = useState(['', '']);
+  const [epicDamageEffect, setEpicDamageEffect] = useState(null); // { id, atk }
+  const [epicShatterIndex, setEpicShatterIndex] = useState(null); // { questId, childIndex }
+  const [epicBossExploding, setEpicBossExploding] = useState(null); // questId
+  const [epicRewardResult, setEpicRewardResult] = useState(null); // { title, gems, coins }
+  const [epicScreenFlash, setEpicScreenFlash] = useState(false);
+
+  // Calculate finalATK for damage display (same formula as BattleArea)
+  const { bonusATK, bonusHP } = useMemo(
+    () => calculateTotalStats(inventory, equippedItems, facilities, reincarnationCount),
+    [equippedItems, inventory, facilities, reincarnationCount]
+  );
+  const baseExp = (stats?.atk || 0) + (stats?.hp || 0);
+  const { currentLevel } = useMemo(() => calculateLevelData(baseExp), [baseExp]);
+  const multiplier = useMemo(() => calculateMultiplier(currentLevel), [currentLevel]);
+  const playerFinalATK = Math.floor(((stats?.atk || 0) + bonusATK) * multiplier);
+
+  const BOSS_HP_COLORS = [
+    { bg: 'from-red-600 to-red-400', border: 'border-red-500', label: 'text-red-400' },
+    { bg: 'from-yellow-600 to-yellow-400', border: 'border-yellow-500', label: 'text-yellow-400' },
+    { bg: 'from-green-600 to-green-400', border: 'border-green-500', label: 'text-green-400' },
+    { bg: 'from-blue-600 to-blue-400', border: 'border-blue-500', label: 'text-blue-400' },
+    { bg: 'from-purple-600 to-purple-400', border: 'border-purple-500', label: 'text-purple-400' },
+    { bg: 'from-pink-600 to-pink-400', border: 'border-pink-500', label: 'text-pink-400' },
+    { bg: 'from-cyan-600 to-cyan-400', border: 'border-cyan-500', label: 'text-cyan-400' },
+    { bg: 'from-orange-600 to-orange-400', border: 'border-orange-500', label: 'text-orange-400' },
+  ];
 
   // Defense Battle State
   const [newHabitName, setNewHabitName] = useState('');
@@ -291,6 +325,92 @@ export default function GuildArea({ resources, setStats, setResources, inventory
     setBadHabits(prev => prev.filter(h => h.id !== habitId));
   };
 
+  // === EPIC QUEST HANDLERS ===
+  const handleAddEpicQuest = (e) => {
+    e.preventDefault();
+    if (!newEpicTitle.trim()) return;
+    const validChildren = newEpicChildren.filter(c => c.trim());
+    if (validChildren.length < 1) return;
+
+    const newEpic = {
+      id: Date.now().toString(),
+      title: newEpicTitle,
+      children: validChildren.map((c, i) => ({
+        id: `${Date.now()}_child_${i}`,
+        title: c,
+        completed: false,
+      })),
+    };
+    setEpicQuests([...epicQuests, newEpic]);
+    setNewEpicTitle('');
+    setNewEpicChildren(['', '']);
+    setIsCreatingEpic(false);
+  };
+
+  const handleEpicChildComplete = (questId, childId) => {
+    const quest = epicQuests.find(q => q.id === questId);
+    if (!quest) return;
+    const childIndex = quest.children.findIndex(c => c.id === childId);
+    if (childIndex === -1 || quest.children[childIndex].completed) return;
+
+    // Trigger damage effect + screen flash + shake
+    setEpicDamageEffect({ id: Date.now(), atk: playerFinalATK });
+    setEpicScreenFlash(true);
+    setEpicShatterIndex({ questId, childIndex });
+
+    setTimeout(() => setEpicScreenFlash(false), 500);
+    setTimeout(() => setEpicDamageEffect(null), 1800);
+    setTimeout(() => setEpicShatterIndex(null), 1000);
+
+    // Update quest data
+    const updatedQuests = epicQuests.map(q => {
+      if (q.id !== questId) return q;
+      const updatedChildren = q.children.map(c =>
+        c.id === childId ? { ...c, completed: true } : c
+      );
+      return { ...q, children: updatedChildren };
+    });
+    setEpicQuests(updatedQuests);
+
+    // Small reward per child
+    const childRewardCoins = 300;
+    const childRewardExp = 80;
+    setResources(prev => ({ ...prev, coins: prev.coins + childRewardCoins }));
+    setStats(prev => ({ ...prev, atk: prev.atk + childRewardExp }));
+
+    // Check if ALL children complete = boss defeated
+    const updatedQuest = updatedQuests.find(q => q.id === questId);
+    if (updatedQuest && updatedQuest.children.every(c => c.completed)) {
+      // Boss defeat after shatter finishes
+      setTimeout(() => {
+        setEpicBossExploding(questId);
+        // After explosion, show reward
+        setTimeout(() => {
+          setEpicBossExploding(null);
+          const rewardGems = 1500;
+          const rewardCoins = 5000;
+          setResources(prev => ({
+            ...prev,
+            gems: prev.gems + rewardGems,
+            coins: prev.coins + rewardCoins,
+          }));
+          setEpicRewardResult({
+            title: updatedQuest.title,
+            gems: rewardGems,
+            coins: rewardCoins,
+            childCount: updatedQuest.children.length,
+          });
+          // Remove from list
+          setEpicQuests(prev => prev.filter(q => q.id !== questId));
+        }, 1500);
+      }, 800);
+    }
+  };
+
+  const handleDeleteEpicQuest = (questId) => {
+    setEpicQuests(epicQuests.filter(q => q.id !== questId));
+  };
+
 
 
   return (
@@ -325,10 +445,16 @@ export default function GuildArea({ resources, setStats, setResources, inventory
           <Flag size={12}/> クエスト
         </button>
         <button 
+          onClick={() => setActiveGuildTab('epic')}
+          className={`flex-1 py-1.5 text-[10px] font-bold rounded-md transition-all flex items-center justify-center gap-1 ${activeGuildTab === 'epic' ? 'bg-red-500/30 text-red-400 shadow-sm shadow-red-500/20' : 'text-gray-500'}`}
+        >
+          <Swords size={12}/> エピック
+        </button>
+        <button 
           onClick={() => setActiveGuildTab('facilities')}
           className={`flex-1 py-1.5 text-[10px] font-bold rounded-md transition-all flex items-center justify-center gap-1 ${activeGuildTab === 'facilities' ? 'bg-game-surface text-white shadow-sm' : 'text-gray-500'}`}
         >
-          <BookOpen size={12}/> 施設投資
+          <BookOpen size={12}/> 施設
         </button>
         <button 
           onClick={() => setActiveGuildTab('defense')}
@@ -489,6 +615,216 @@ export default function GuildArea({ resources, setStats, setResources, inventory
               );
             })}
           </>
+        )}
+
+        {/* === EPIC QUEST TAB === */}
+        {activeGuildTab === 'epic' && (
+          <div className="space-y-4 animate-in fade-in duration-300">
+            {/* Creation Button / Form */}
+            {!isCreatingEpic ? (
+              <button
+                onClick={() => setIsCreatingEpic(true)}
+                className="w-full py-4 border-2 border-dashed border-red-500/30 rounded-xl text-red-400/60 font-bold flex items-center justify-center gap-2 hover:border-red-500 hover:text-red-400 hover:bg-red-500/5 transition-all"
+              >
+                <Swords size={20} /> ＋ エピッククエストを作成
+              </button>
+            ) : (
+              <form onSubmit={handleAddEpicQuest} className="glass-panel p-4 border-red-500/50 relative">
+                <button type="button" onClick={() => setIsCreatingEpic(false)} className="absolute top-2 right-2 text-game-muted hover:text-white">
+                  <X size={16} />
+                </button>
+                <h3 className="font-bold text-sm mb-3 flex items-center gap-2">
+                  <Skull size={14} className="text-red-400" /> エピッククエスト発行
+                </h3>
+
+                <label className="text-[10px] text-gray-400 font-bold block mb-1">ボス名（親タスク）</label>
+                <input
+                  type="text"
+                  value={newEpicTitle}
+                  onChange={(e) => setNewEpicTitle(e.target.value)}
+                  placeholder="例: 確定申告を終わらせる"
+                  className="w-full bg-[#111827] border border-game-surface text-white p-2 rounded mb-3 text-sm focus:outline-none focus:border-red-500"
+                  autoFocus
+                />
+
+                <label className="text-[10px] text-gray-400 font-bold block mb-1">アーマー（子タスク）</label>
+                {newEpicChildren.map((child, i) => (
+                  <div key={i} className="flex gap-2 mb-2">
+                    <span className="text-[10px] text-gray-500 font-bold mt-2.5 w-4">{i + 1}.</span>
+                    <input
+                      type="text"
+                      value={child}
+                      onChange={(e) => {
+                        const updated = [...newEpicChildren];
+                        updated[i] = e.target.value;
+                        setNewEpicChildren(updated);
+                      }}
+                      placeholder={`子タスク ${i + 1}`}
+                      className="flex-1 bg-[#111827] border border-game-surface text-white p-2 rounded text-xs focus:outline-none focus:border-red-500"
+                    />
+                    {newEpicChildren.length > 1 && (
+                      <button
+                        type="button"
+                        onClick={() => setNewEpicChildren(newEpicChildren.filter((_, j) => j !== i))}
+                        className="text-red-400 hover:text-red-300 px-1"
+                      >
+                        <X size={14} />
+                      </button>
+                    )}
+                  </div>
+                ))}
+                <button
+                  type="button"
+                  onClick={() => setNewEpicChildren([...newEpicChildren, ''])}
+                  className="text-[10px] text-red-400 font-bold mb-3 flex items-center gap-1 hover:text-red-300"
+                >
+                  <Plus size={12} /> 子タスクを追加
+                </button>
+
+                <p className="text-[10px] text-game-muted mb-3 text-center">
+                  討伐報酬: 💎 1,500 ジェム / 💰 5,000 コイン
+                </p>
+
+                <button
+                  type="submit"
+                  className="w-full bg-red-500 text-white font-black py-2 rounded flex items-center justify-center gap-1 shadow-[0_0_15px_rgba(239,68,68,0.4)] hover:bg-red-400 transition-all"
+                >
+                  <Flame size={16} /> レイドボスを発行する
+                </button>
+              </form>
+            )}
+
+            {epicQuests.length === 0 && !isCreatingEpic && (
+              <p className="text-center text-game-muted text-sm mt-8">エピッククエストはありません。<br/>大きなタスクを分割して挑戦しましょう。</p>
+            )}
+
+            {/* Epic Quest Boss Cards */}
+            {epicQuests.map((quest) => {
+              const totalChildren = quest.children.length;
+              const completedChildren = quest.children.filter(c => c.completed).length;
+              const isExploding = epicBossExploding === quest.id;
+
+              return (
+                <div key={quest.id} className="relative">
+                  {/* Boss Card */}
+                  <div className={`glass-panel p-0 overflow-hidden border-red-500/30 relative ${isExploding ? 'animate-boss-explode' : ''}`}>
+                    {/* Boss Header */}
+                    <div className="relative bg-gradient-to-r from-red-900/60 via-red-800/40 to-red-900/60 p-4 border-b border-red-500/20">
+                      <div className="absolute inset-0 animate-boss-aura rounded-t-xl pointer-events-none"></div>
+                      <div className="relative flex items-center gap-3">
+                        {/* Boss Icon */}
+                        <div className="w-14 h-14 rounded-full bg-red-950 border-2 border-red-500 flex items-center justify-center shadow-[0_0_20px_rgba(239,68,68,0.5)] animate-pulse">
+                          <Skull size={28} className="text-red-400 drop-shadow-[0_0_10px_rgba(239,68,68,0.8)]" />
+                        </div>
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-1">
+                            <span className="text-[9px] font-black tracking-widest bg-red-500/30 text-red-300 px-2 py-0.5 rounded-full border border-red-500/50">EPIC BOSS</span>
+                          </div>
+                          <h3 className="font-black text-white text-base tracking-wide drop-shadow-[0_0_8px_rgba(255,255,255,0.3)]">
+                            {quest.title}
+                          </h3>
+                          <span className="text-[10px] text-red-300/80">アーマー残り: {totalChildren - completedChildren} / {totalChildren}</span>
+                        </div>
+                        <button
+                          onClick={() => handleDeleteEpicQuest(quest.id)}
+                          className="absolute top-2 right-2 text-gray-600 hover:text-red-400 transition-colors"
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Multi-layer HP Bars */}
+                    <div className="px-4 pt-3 pb-1">
+                      <div className="text-[9px] font-black text-red-400 tracking-widest mb-2 flex items-center gap-1">
+                        <Shield size={10} /> BOSS HP GAUGE
+                      </div>
+                      <div className="space-y-1.5">
+                        {quest.children.map((child, idx) => {
+                          const color = BOSS_HP_COLORS[idx % BOSS_HP_COLORS.length];
+                          const isShattered = child.completed;
+                          const isCurrentlyShatterAnim = epicShatterIndex?.questId === quest.id && epicShatterIndex?.childIndex === idx;
+
+                          return (
+                            <div key={child.id} className="relative">
+                              <div className="flex items-center gap-2">
+                                <span className={`text-[8px] font-bold w-12 truncate ${isShattered ? 'text-gray-600 line-through' : color.label}`}>
+                                  {child.title.slice(0, 6)}
+                                </span>
+                                <div className={`flex-1 h-3 bg-gray-800/80 rounded-full overflow-hidden border ${isShattered ? 'border-gray-700' : color.border}`}>
+                                  <div
+                                    className={`h-full bg-gradient-to-r ${color.bg} transition-all duration-500 rounded-full relative overflow-hidden
+                                      ${isCurrentlyShatterAnim ? 'animate-hp-shatter' : ''}
+                                      ${isShattered && !isCurrentlyShatterAnim ? 'w-0' : 'w-full'}
+                                    `}
+                                  >
+                                    {!isShattered && (
+                                      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-pulse"></div>
+                                    )}
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    {/* Child Tasks Checklist */}
+                    <div className="px-4 pt-3 pb-4">
+                      <div className="text-[9px] font-black text-gray-400 tracking-widest mb-2 flex items-center gap-1">
+                        <Target size={10} /> TARGET LIST
+                      </div>
+                      <div className="space-y-2">
+                        {quest.children.map((child, idx) => {
+                          const color = BOSS_HP_COLORS[idx % BOSS_HP_COLORS.length];
+                          return (
+                            <div
+                              key={child.id}
+                              className={`flex items-center gap-2 p-2 rounded-lg border transition-all ${
+                                child.completed
+                                  ? 'bg-gray-800/30 border-gray-700/50'
+                                  : 'bg-[#111827] border-game-surface hover:border-red-500/30'
+                              }`}
+                            >
+                              {child.completed ? (
+                                <CheckCircle2 size={16} className="text-gray-500 flex-shrink-0" />
+                              ) : (
+                                <div className={`w-4 h-4 rounded-full border-2 ${color.border} flex-shrink-0`}></div>
+                              )}
+                              <span className={`text-xs flex-1 ${child.completed ? 'text-gray-500 line-through' : 'text-white font-bold'}`}>
+                                {child.title}
+                              </span>
+                              {!child.completed && (
+                                <button
+                                  onClick={() => handleEpicChildComplete(quest.id, child.id)}
+                                  className="px-3 py-1.5 bg-red-500/20 border border-red-500 text-red-400 rounded-lg text-[10px] font-black tracking-wider hover:bg-red-500/30 active:scale-95 transition-all shadow-[0_0_10px_rgba(239,68,68,0.2)] flex items-center gap-1"
+                                >
+                                  <Zap size={10} /> 討伐
+                                </button>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+
+                      {/* Reward Preview */}
+                      <div className="mt-3 bg-[#111827] border border-game-surface rounded-md p-2">
+                        <span className="text-[10px] text-game-muted block mb-1">■ 完全討伐報酬</span>
+                        <div className="flex items-center gap-3">
+                          <span className="text-[11px] text-game-accent font-bold">💎 1,500 ジェム</span>
+                          <span className="text-[11px] text-gray-500">/</span>
+                          <span className="text-[11px] text-[#fbbf24] font-bold">💰 5,000 コイン</span>
+                          <span className="text-[11px] text-gray-500">/</span>
+                          <span className="text-[11px] text-red-400 font-bold">EXP +80×{totalChildren}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
         )}
 
         {/* --- FACILITIES TAB --- */}
@@ -761,6 +1097,86 @@ export default function GuildArea({ resources, setStats, setResources, inventory
           <div className="bg-red-500 text-white px-6 py-3 rounded-full shadow-lg font-bold text-sm tracking-wider flex items-center gap-2">
             <X size={18} className="bg-white/20 rounded-full" />
             {upgradeToast}
+          </div>
+        </div>
+      )}
+
+      {/* === EPIC QUEST OVERLAYS === */}
+
+      {/* Screen Flash on Child Complete */}
+      {epicScreenFlash && (
+        <div className="fixed inset-0 z-[400] bg-red-500 animate-screen-flash pointer-events-none"></div>
+      )}
+
+      {/* Critical Damage Number */}
+      {epicDamageEffect && (
+        <div className="fixed inset-0 z-[500] pointer-events-none flex items-center justify-center">
+          <div
+            key={epicDamageEffect.id}
+            className="animate-critical-hit absolute top-1/2 left-1/2 flex flex-col items-center"
+          >
+            <span className="text-[10px] font-black tracking-[0.3em] text-yellow-400 mb-1 drop-shadow-[0_0_10px_rgba(251,191,36,0.8)]">
+              CRITICAL HIT!
+            </span>
+            <span className="text-5xl font-black text-red-500 drop-shadow-[0_2px_20px_rgba(239,68,68,0.9)] italic tracking-tight">
+              {epicDamageEffect.atk.toLocaleString()}
+            </span>
+            <span className="text-[10px] font-bold text-white tracking-widest mt-1 drop-shadow-[0_0_5px_rgba(255,255,255,0.5)]">
+              ATK DAMAGE
+            </span>
+          </div>
+        </div>
+      )}
+
+      {/* Epic Boss Defeat Reward Modal */}
+      {epicRewardResult && (
+        <div className="fixed inset-0 z-[600] flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/90 backdrop-blur-xl animate-in fade-in duration-300"></div>
+          <div className="relative z-10 w-full max-w-sm animate-epic-result flex flex-col items-center text-center">
+            {/* Radial glow */}
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(239,68,68,0.15)_0%,transparent_70%)] pointer-events-none"></div>
+
+            {/* Crown Icon */}
+            <div className="w-24 h-24 rounded-full bg-red-500/20 border-2 border-red-500 flex items-center justify-center mb-4 shadow-[0_0_30px_rgba(239,68,68,0.5)] animate-pulse">
+              <Trophy size={48} className="text-red-400 drop-shadow-[0_0_15px_rgba(239,68,68,0.8)]" />
+            </div>
+
+            <h2 className="text-3xl font-black text-red-400 tracking-tight mb-1 drop-shadow-[0_0_15px_rgba(239,68,68,0.5)] italic">
+              EPIC BOSS SLAIN!
+            </h2>
+            <p className="text-gray-400 text-sm mb-6">
+              【{epicRewardResult.title}】を完全討伐しました！
+            </p>
+
+            {/* Loot display */}
+            <div className="glass-panel p-6 w-full border-red-500/30 mb-6">
+              <h3 className="text-[10px] font-black text-red-400 tracking-[0.2em] mb-4 flex items-center justify-center gap-2">
+                <Gift size={14} /> EPIC LOOT DROP
+              </h3>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="bg-[#111827] border border-game-accent/30 p-4 rounded-xl flex flex-col items-center animate-gem-bounce">
+                  <GemIcon className="text-game-accent mb-2" size={28} />
+                  <span className="text-[10px] text-game-muted font-bold">GEMS</span>
+                  <span className="text-xl font-black text-game-accent">+{epicRewardResult.gems.toLocaleString()}</span>
+                </div>
+                <div className="bg-[#111827] border border-yellow-500/30 p-4 rounded-xl flex flex-col items-center">
+                  <Coins className="text-[#fbbf24] mb-2" size={28} />
+                  <span className="text-[10px] text-game-muted font-bold">COINS</span>
+                  <span className="text-xl font-black text-white">+{epicRewardResult.coins.toLocaleString()}</span>
+                </div>
+              </div>
+              <div className="mt-4 bg-red-500/10 border border-red-500/20 rounded-lg p-3 flex items-center justify-center gap-2">
+                <Flame size={14} className="text-red-400" />
+                <span className="text-[11px] text-red-300 font-bold">{epicRewardResult.childCount}段階のアーマーを全て破壊！</span>
+              </div>
+            </div>
+
+            <button
+              onClick={() => setEpicRewardResult(null)}
+              className="w-full py-4 bg-red-500 text-white font-black rounded-xl shadow-[0_0_20px_rgba(239,68,68,0.5)] active:scale-95 transition-all text-lg tracking-wider"
+            >
+              ギルドに戻る
+            </button>
           </div>
         </div>
       )}

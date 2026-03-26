@@ -17,6 +17,7 @@ const GAME_KEYS = [
   'gemini_survivor_resources',
   'gemini_survivor_quests',
   'gemini_survivor_pethunt',
+  'gemini_survivor_epic_quests',
 ];
 
 // Default values for each key (must match App.jsx initial values)
@@ -37,6 +38,7 @@ const DEFAULTS = {
   gemini_survivor_resources: { stamina: 0, coins: 0, gems: 0 },
   gemini_survivor_quests: [],
   gemini_survivor_pethunt: false,
+  gemini_survivor_epic_quests: [],
 };
 
 /**

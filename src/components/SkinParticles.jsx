@@ -43,27 +43,28 @@ export default function SkinParticles({ activeSkin }) {
         icon: theme.icons[Math.floor(Math.random() * theme.icons.length)],
         color: theme.colors[Math.floor(Math.random() * theme.colors.length)],
         x: Math.random() * 100, // % from left
-        size: 10 + Math.random() * 14, // 10-24px
-        duration: 4 + Math.random() * 4, // 4-8s
-        delay: Math.random() * 0.5,
-        sway: -30 + Math.random() * 60, // horizontal sway px
-        rotation: Math.random() * 360,
+        size: 8 + Math.random() * 20, // 8-28px
+        duration: 3 + Math.random() * 5, // 3-8s
+        delay: Math.random() * 0.2,
+        sway: -50 + Math.random() * 100, // horizontal sway px
+        rotation: Math.random() * 720, // more rotation
+        pulse: 0.5 + Math.random() * 1.5, // pulse duration scale
       };
 
       setParticles(prev => {
         const updated = [...prev, newParticle];
-        // Limit to 18 particles max for performance
-        if (updated.length > 18) {
-          return updated.slice(-18);
+        // Increased max particles for "flashier" effect
+        if (updated.length > 40) {
+          return updated.slice(-40);
         }
         return updated;
       });
-    }, 600);
+    }, 250);
 
     // Cleanup dead particles periodically
     const cleanupInterval = setInterval(() => {
-      setParticles(prev => prev.slice(-18));
-    }, 10000);
+      setParticles(prev => prev.slice(-40));
+    }, 8000);
 
     return () => {
       clearInterval(spawnInterval);

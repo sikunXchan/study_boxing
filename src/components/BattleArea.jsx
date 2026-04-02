@@ -40,9 +40,8 @@ export default function BattleArea({ stats, setStats, resources, setResources, i
   const [timeLeft, setTimeLeft] = useState(DEFAULT_TIMER_SECONDS);
   const [isActive, setIsActive] = useState(false);
   const [accumulatedCoins, setAccumulatedCoins] = useState(0);
-  const [accumulatedExp, setAccumulatedExp] = useState(0);
   const [hitEffects, setHitEffects] = useState([]);
-  const [rewardResult, setRewardResult] = useState(null); // { type: 'complete' | 'retreat', coins: number, exp: number }
+  const [rewardResult, setRewardResult] = useState(null); // { type: 'complete' | 'retreat', coins: number }
   const hitIdCounter = useRef(0);
   const wakeLockRef = useRef(null);
 
@@ -63,7 +62,6 @@ export default function BattleArea({ stats, setStats, resources, setResources, i
   // Reward generation formula per second
   // Targets: combatPower 10M → ~10,000 coins/30min, 1M → ~2,000 coins/30min
   const coinsPerSec = Math.pow(combatPower, 0.7) * 0.00007;
-  const expPerSec = coinsPerSec / 5;
 
   // Get currently equipped items for visual
   const getEquipped = (type) => inventory.find(i => i.id === equippedItems[type]);
@@ -148,39 +146,27 @@ export default function BattleArea({ stats, setStats, resources, setResources, i
     setIsActive(false);
     // Give 20% penalty
     const earnedCoins = Math.floor(accumulatedCoins * 0.2);
-    const earnedExp = Math.floor(accumulatedExp * 0.2);
-    distributeRewards(earnedCoins, earnedExp);
-    setRewardResult({ type: 'retreat', coins: earnedCoins, exp: earnedExp });
+    distributeRewards(earnedCoins);
+    setRewardResult({ type: 'retreat', coins: earnedCoins });
   };
 
   const handleComplete = () => {
     setIsActive(false);
     playVictoryChime();
     const earnedCoins = Math.floor(accumulatedCoins);
-    const earnedExp = Math.floor(accumulatedExp);
-    distributeRewards(earnedCoins, earnedExp);
-    setRewardResult({ type: 'complete', coins: earnedCoins, exp: earnedExp });
+    distributeRewards(earnedCoins);
+    setRewardResult({ type: 'complete', coins: earnedCoins });
   };
 
-  const distributeRewards = (coins, exp) => {
+  const distributeRewards = (coins) => {
     if (coins > 0) {
       setResources(prev => ({ ...prev, coins: prev.coins + coins }));
-    }
-    if (exp > 0) {
-      const atkExp = Math.floor(exp / 2);
-      const hpExp = exp - atkExp;
-      setStats(prev => ({
-        ...prev,
-        atk: prev.atk + atkExp,
-        hp: prev.hp + hpExp
-      }));
     }
   };
 
   const resetTimer = () => {
     setTimeLeft(DEFAULT_TIMER_SECONDS);
     setAccumulatedCoins(0);
-    setAccumulatedExp(0);
   };
 
   const formatTime = (seconds) => {
@@ -195,7 +181,6 @@ export default function BattleArea({ stats, setStats, resources, setResources, i
       interval = setInterval(() => {
         setTimeLeft(time => time - 1);
         setAccumulatedCoins(c => c + coinsPerSec);
-        setAccumulatedExp(e => e + expPerSec);
 
         // Visual hit effect
         if (Math.random() > 0.4) {
@@ -203,7 +188,7 @@ export default function BattleArea({ stats, setStats, resources, setResources, i
             id: hitIdCounter.current++,
             x: 60 + Math.random() * 30,
             y: 30 + Math.random() * 40,
-            damage: Math.floor(finalATK * (0.8 + Math.random() * 0.4))
+            damage: Math.floor(combatPower * (0.8 + Math.random() * 0.4))
           };
           setHitEffects(prev => [...prev.slice(-4), newHit]);
         }
@@ -213,7 +198,7 @@ export default function BattleArea({ stats, setStats, resources, setResources, i
       clearInterval(interval);
     }
     return () => clearInterval(interval);
-  }, [isActive, timeLeft, coinsPerSec, expPerSec, finalATK]);
+  }, [isActive, timeLeft, coinsPerSec, combatPower]);
 
   return (
     <div className="p-4 flex flex-col items-center h-full animate-in fade-in duration-300 relative">
@@ -221,7 +206,7 @@ export default function BattleArea({ stats, setStats, resources, setResources, i
         <Sword size={20} /> Auto Battle Focus <Sword size={20} />
       </h2>
       <p className="text-[10px] text-game-muted font-bold mb-6 text-center max-w-xs">
-        集中して敵をなぎ倒しましょう！獲得EXPはATKとHPに均等に分配されます。
+        集中して敵をなぎ倒しましょう！獲得コインは戦闘力に応じて増加します。
       </p>
 
       {/* Battle Scene */}
@@ -353,15 +338,8 @@ export default function BattleArea({ stats, setStats, resources, setResources, i
       <div className="flex gap-6 mb-8 bg-game-surface px-6 py-3 rounded-xl border border-game-muted/30">
         <div className="flex flex-col items-center">
           <span className="text-[10px] text-gray-400 font-bold mb-1">獲得予定コイン</span>
-          <span className="text-yellow-400 font-black flex items-center gap-1">
-            <Coins size={14} /> {Math.floor(accumulatedCoins).toLocaleString()}
-          </span>
-        </div>
-        <div className="w-px bg-game-muted/30"></div>
-        <div className="flex flex-col items-center">
-          <span className="text-[10px] text-gray-400 font-bold mb-1">獲得予定 EXP</span>
-          <span className="text-blue-400 font-black flex items-center gap-1">
-            <Star size={14} /> {Math.floor(accumulatedExp).toLocaleString()}
+          <span className="text-yellow-400 font-black flex items-center gap-1 text-lg">
+            <Coins size={16} /> {Math.floor(accumulatedCoins).toLocaleString()}
           </span>
         </div>
       </div>
@@ -402,21 +380,11 @@ export default function BattleArea({ stats, setStats, resources, setResources, i
                {rewardResult.type === 'complete' ? '素晴らしい集中力でした。お疲れ様です！' : 'やむを得ず撤退しました。次回は完走を目指しましょう！'}
              </p>
 
-             <div className="grid grid-cols-3 gap-3 w-full mb-8">
-               <div className="bg-[#111827] border border-game-surface p-4 rounded-xl flex flex-col items-center">
-                 <Coins className="text-[#fbbf24] mb-1" size={24} />
-                 <span className="text-xs text-game-muted font-bold">COINS</span>
-                 <span className="text-lg font-black text-white">+{rewardResult.coins.toLocaleString()}</span>
-               </div>
-               <div className="bg-[#111827] border border-game-surface p-4 rounded-xl flex flex-col items-center">
-                 <Sword className="text-red-400 mb-1" size={24} />
-                 <span className="text-xs text-game-muted font-bold">ATK EXP</span>
-                 <span className="text-lg font-black text-white">+{Math.floor(rewardResult.exp / 2).toLocaleString()}</span>
-               </div>
-               <div className="bg-[#111827] border border-game-surface p-4 rounded-xl flex flex-col items-center">
-                 <Shield className="text-game-primary mb-1" size={24} />
-                 <span className="text-xs text-game-muted font-bold">HP EXP</span>
-                 <span className="text-lg font-black text-white">+{(rewardResult.exp - Math.floor(rewardResult.exp / 2)).toLocaleString()}</span>
+             <div className="grid grid-cols-1 gap-3 w-full mb-8">
+               <div className="bg-[#111827] border border-game-surface p-4 rounded-xl flex flex-col items-center shadow-neon">
+                 <Coins className="text-[#fbbf24] mb-1" size={32} />
+                 <span className="text-sm text-game-muted font-bold">COINS</span>
+                 <span className="text-3xl font-black text-white">+{rewardResult.coins.toLocaleString()}</span>
                </div>
              </div>
 

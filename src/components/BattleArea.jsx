@@ -136,11 +136,12 @@ export default function BattleArea({ stats, setStats, resources, setResources, i
       setResources(prev => ({ ...prev, coins: prev.coins + coins }));
     }
     if (exp > 0) {
-      const isAtk = Math.random() > 0.5;
+      const atkExp = Math.floor(exp / 2);
+      const hpExp = exp - atkExp;
       setStats(prev => ({
         ...prev,
-        atk: prev.atk + (isAtk ? exp : 0),
-        hp: prev.hp + (!isAtk ? exp : 0)
+        atk: prev.atk + atkExp,
+        hp: prev.hp + hpExp
       }));
     }
   };
@@ -189,7 +190,7 @@ export default function BattleArea({ stats, setStats, resources, setResources, i
         <Sword size={20} /> Auto Battle Focus <Sword size={20} />
       </h2>
       <p className="text-[10px] text-game-muted font-bold mb-6 text-center max-w-xs">
-        集中して敵をなぎ倒しましょう！自分のATKが高いほど、時間内に多くの報酬を獲得できます。
+        集中して敵をなぎ倒しましょう！獲得EXPはATKとHPに均等に分配されます。
       </p>
 
       {/* Battle Scene */}
@@ -370,16 +371,21 @@ export default function BattleArea({ stats, setStats, resources, setResources, i
                {rewardResult.type === 'complete' ? '素晴らしい集中力でした。お疲れ様です！' : 'やむを得ず撤退しました。次回は完走を目指しましょう！'}
              </p>
 
-             <div className="grid grid-cols-2 gap-4 w-full mb-8">
+             <div className="grid grid-cols-3 gap-3 w-full mb-8">
                <div className="bg-[#111827] border border-game-surface p-4 rounded-xl flex flex-col items-center">
                  <Coins className="text-[#fbbf24] mb-1" size={24} />
                  <span className="text-xs text-game-muted font-bold">COINS</span>
                  <span className="text-lg font-black text-white">+{rewardResult.coins.toLocaleString()}</span>
                </div>
                <div className="bg-[#111827] border border-game-surface p-4 rounded-xl flex flex-col items-center">
-                 <Star className="text-game-primary mb-1" size={24} />
-                 <span className="text-xs text-game-muted font-bold">TOTAL EXP</span>
-                 <span className="text-lg font-black text-white">+{rewardResult.exp.toLocaleString()}</span>
+                 <Sword className="text-red-400 mb-1" size={24} />
+                 <span className="text-xs text-game-muted font-bold">ATK EXP</span>
+                 <span className="text-lg font-black text-white">+{Math.floor(rewardResult.exp / 2).toLocaleString()}</span>
+               </div>
+               <div className="bg-[#111827] border border-game-surface p-4 rounded-xl flex flex-col items-center">
+                 <Shield className="text-game-primary mb-1" size={24} />
+                 <span className="text-xs text-game-muted font-bold">HP EXP</span>
+                 <span className="text-lg font-black text-white">+{(rewardResult.exp - Math.floor(rewardResult.exp / 2)).toLocaleString()}</span>
                </div>
              </div>
 

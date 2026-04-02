@@ -5,8 +5,9 @@ import { GACHA_POOL } from '../data/items';
 import { exportSaveData, importSaveData } from '../utils/saveMigration';
 
 export default function ShopArea({ resources, setResources, setInventory }) {
-  const [gachaResult, setGachaResult] = useState(null); 
+  const [gachaResult, setGachaResult] = useState(null); // single item or array of items
   const [isPulling, setIsPulling] = useState(null); // 'legendary' | 'epic' | 'rare' | 'normal' | null
+  const [isMultiResult, setIsMultiResult] = useState(false); // true when showing 10-pull results
 
   // Fixed SNS Costs as per the economic finalization
   const snsItems = [
@@ -78,36 +79,35 @@ export default function ShopArea({ resources, setResources, setInventory }) {
     }
   };
 
+  const drawOneFromPool = (pool) => {
+    const totalWeight = pool.reduce((sum, item) => sum + item.weight, 0);
+    let randomNum = Math.random() * totalWeight;
+    let drawnBaseItem = pool[0]; 
+    
+    for (const item of pool) {
+      if (randomNum < item.weight) {
+        drawnBaseItem = item;
+        break;
+      }
+      randomNum -= item.weight;
+    }
+    return drawnBaseItem;
+  };
+
   const handlePullGacha = (allowedTypes = []) => {
     if (resources.gems >= 300) {
-      // Deduct gems
       setResources(prev => ({ ...prev, gems: prev.gems - 300 }));
-      
-      // Filter the pool based on the requested gacha box
       const pool = GACHA_POOL.filter(item => allowedTypes.includes(item.type));
+      const drawnBaseItem = drawOneFromPool(pool);
 
-      // Calculate weighted probability from the filtered pool
-      const totalWeight = pool.reduce((sum, item) => sum + item.weight, 0);
-      let randomNum = Math.random() * totalWeight;
-      let drawnBaseItem = pool[0]; 
-      
-      for (const item of pool) {
-        if (randomNum < item.weight) {
-          drawnBaseItem = item;
-          break;
-        }
-        randomNum -= item.weight;
-      }
-
-      // Create unique instance
       const newItemInstance = {
         ...drawnBaseItem,
         id: `item_${Date.now()}_${Math.floor(Math.random() * 1000)}`,
         upgradeLevel: 0
       };
 
-      // Start intense visual FX sequence
       setIsPulling(drawnBaseItem.rarity);
+      setIsMultiResult(false);
       
       setTimeout(() => {
         setIsPulling(null);
@@ -120,8 +120,45 @@ export default function ShopArea({ resources, setResources, setInventory }) {
     }
   };
 
+  const handlePull10Gacha = (allowedTypes = []) => {
+    const cost = 2700; // 10連は10%割引
+    if (resources.gems >= cost) {
+      setResources(prev => ({ ...prev, gems: prev.gems - cost }));
+      const pool = GACHA_POOL.filter(item => allowedTypes.includes(item.type));
+      const results = [];
+      let highestRarity = 'normal';
+      const rarityOrder = ['normal', 'uncommon', 'rare', 'epic', 'legendary'];
+      
+      for (let i = 0; i < 10; i++) {
+        const drawnBaseItem = drawOneFromPool(pool);
+        const newItemInstance = {
+          ...drawnBaseItem,
+          id: `item_${Date.now()}_${i}_${Math.floor(Math.random() * 1000)}`,
+          upgradeLevel: 0
+        };
+        results.push(newItemInstance);
+        if (rarityOrder.indexOf(drawnBaseItem.rarity) > rarityOrder.indexOf(highestRarity)) {
+          highestRarity = drawnBaseItem.rarity;
+        }
+      }
+
+      setIsPulling(highestRarity);
+      setIsMultiResult(true);
+      
+      setTimeout(() => {
+        setIsPulling(null);
+        setInventory(prev => [...prev, ...results]);
+        setGachaResult(results);
+      }, 1500);
+      
+    } else {
+      alert('ジェムが足りません！ (2700💎 必要です)');
+    }
+  };
+
   const closeGachaModal = () => {
     setGachaResult(null);
+    setIsMultiResult(false);
   };
 
   return (
@@ -146,9 +183,15 @@ export default function ShopArea({ resources, setResources, setInventory }) {
 
             <button 
               onClick={() => handlePullGacha(['weapon', 'armor', 'necklace', 'gloves', 'belt', 'boots'])}
-              className="w-full glass-btn py-2 bg-game-secondary/20 border-game-secondary text-game-secondary font-bold text-xs hover:bg-game-secondary/30"
+              className="w-full glass-btn py-1.5 bg-game-secondary/20 border-game-secondary text-game-secondary font-bold text-xs hover:bg-game-secondary/30 mb-1.5"
             >
-              引く (300 💎)
+              1回引く (300 💎)
+            </button>
+            <button 
+              onClick={() => handlePull10Gacha(['weapon', 'armor', 'necklace', 'gloves', 'belt', 'boots'])}
+              className="w-full glass-btn py-1.5 bg-gradient-to-r from-game-secondary/30 to-game-accent/20 border-game-accent text-game-accent font-bold text-xs hover:from-game-secondary/40 hover:to-game-accent/30 animate-pulse"
+            >
+              10連 (2700 💎)
             </button>
           </div>
         </div>
@@ -168,9 +211,15 @@ export default function ShopArea({ resources, setResources, setInventory }) {
 
             <button 
               onClick={() => handlePullGacha(['collar', 'toy'])}
-              className="w-full glass-btn py-2 bg-game-accent/20 border-game-accent text-game-accent font-bold text-xs hover:bg-game-accent/30"
+              className="w-full glass-btn py-1.5 bg-game-accent/20 border-game-accent text-game-accent font-bold text-xs hover:bg-game-accent/30 mb-1.5"
             >
-              引く (300 💎)
+              1回引く (300 💎)
+            </button>
+            <button 
+              onClick={() => handlePull10Gacha(['collar', 'toy'])}
+              className="w-full glass-btn py-1.5 bg-gradient-to-r from-game-accent/30 to-game-secondary/20 border-game-secondary text-game-secondary font-bold text-xs hover:from-game-accent/40 hover:to-game-secondary/30 animate-pulse"
+            >
+              10連 (2700 💎)
             </button>
           </div>
         </div>
@@ -333,8 +382,8 @@ export default function ShopArea({ resources, setResources, setInventory }) {
         </div>
       )}
 
-      {/* Gacha Result Modal */}
-      {gachaResult && !isPulling && (
+      {/* Gacha Result Modal - Single Pull */}
+      {gachaResult && !isPulling && !isMultiResult && (
         <div className="absolute inset-x-0 bottom-0 top-[-64px] z-50 bg-[#111827]/96 backdrop-blur-xl flex items-center justify-center flex-col animate-in fade-in duration-300">
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.05)_0%,transparent_70%)] pointer-events-none"></div>
 
@@ -343,9 +392,7 @@ export default function ShopArea({ resources, setResources, setInventory }) {
           </h2>
           
           <div className={`w-40 h-40 rounded-2xl border-4 bg-game-bg flex items-center justify-center mb-6 relative shadow-2xl animate-in zoom-in-50 duration-500 fill-mode-both ${getRarityStyle(gachaResult.rarity)}`}>
-            {/* Glow behind icon */}
             <div className={`absolute inset-0 blur-2xl opacity-40 ${gachaResult.rarity === 'legendary' ? 'bg-game-accent' : gachaResult.rarity === 'epic' ? 'bg-game-secondary' : 'bg-blue-500'}`}></div>
-            {/* Render dynamically mapped Lucide Icon */}
             <div className="relative z-10 animate-bounce mt-4">
               {renderIcon(gachaResult.iconName, getRarityStyle(gachaResult.rarity))}
             </div>
@@ -366,6 +413,60 @@ export default function ShopArea({ resources, setResources, setInventory }) {
           >
             <X size={20} /> とじる
           </button>
+        </div>
+      )}
+
+      {/* Gacha Result Modal - 10-Pull */}
+      {gachaResult && !isPulling && isMultiResult && Array.isArray(gachaResult) && (
+        <div className="absolute inset-x-0 bottom-0 top-[-64px] z-50 bg-[#111827]/96 backdrop-blur-xl flex flex-col animate-in fade-in duration-300">
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(251,191,36,0.08)_0%,transparent_70%)] pointer-events-none"></div>
+          
+          <div className="text-center pt-6 pb-3 relative z-10">
+            <h2 className="text-3xl font-black italic tracking-widest text-game-accent drop-shadow-[0_0_15px_rgba(251,191,36,0.8)] animate-in slide-in-from-top-4 duration-500">
+              10連ガチャ結果！
+            </h2>
+            <p className="text-xs text-game-muted mt-1">10アイテム獲得</p>
+          </div>
+
+          <div className="flex-1 overflow-y-auto px-4 pb-4 relative z-10 custom-scrollbar">
+            <div className="grid grid-cols-2 gap-3 max-w-sm mx-auto">
+              {gachaResult.map((item, index) => (
+                <div 
+                  key={item.id} 
+                  className={`rounded-xl border-2 bg-game-bg p-3 flex flex-col items-center relative shadow-lg animate-in zoom-in-50 duration-300 ${getRarityStyle(item.rarity)}`}
+                  style={{ animationDelay: `${index * 80}ms`, animationFillMode: 'both' }}
+                >
+                  <div className={`absolute inset-0 rounded-xl blur-xl opacity-20 ${item.rarity === 'legendary' ? 'bg-game-accent' : item.rarity === 'epic' ? 'bg-game-secondary' : item.rarity === 'rare' ? 'bg-blue-500' : 'bg-transparent'}`}></div>
+                  
+                  <span className={`text-[8px] font-black tracking-widest mb-1 relative z-10 ${getRarityStyle(item.rarity)}`}>
+                    {getRarityName(item.rarity)}
+                  </span>
+                  
+                  <div className="w-12 h-12 flex items-center justify-center relative z-10 mb-1">
+                    {(() => {
+                      const IconComp = LucideIcons[item.iconName] || LucideIcons.HelpCircle;
+                      return <IconComp className={getRarityStyle(item.rarity)} size={36} />;
+                    })()}
+                  </div>
+                  
+                  <h4 className="text-[10px] font-bold text-white text-center leading-tight relative z-10 mb-1">{item.label}</h4>
+                  <div className="flex gap-1 text-[8px] relative z-10">
+                    {item.bonusATK > 0 && <span className="text-red-400 font-bold">ATK+{item.bonusATK}</span>}
+                    {item.bonusHP > 0 && <span className="text-game-primary font-bold">HP+{item.bonusHP}</span>}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="p-4 relative z-10 flex justify-center">
+            <button 
+              onClick={closeGachaModal}
+              className="w-48 py-3 bg-game-surface border-2 border-game-surface text-white rounded-full font-bold tracking-widest hover:border-game-primary hover:text-game-primary transition-all active:scale-95 flex items-center justify-center gap-2"
+            >
+              <X size={20} /> とじる
+            </button>
+          </div>
         </div>
       )}
     </div>

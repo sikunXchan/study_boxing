@@ -586,7 +586,7 @@ export default function HomeArea({ stats, setStats, inventory, setInventory, equ
                  </button>
 
                  {SKINS.map(skin => {
-                   const statsPayload = { atk: stats.atk + bonusATK, hp: stats.hp + bonusHP };
+                   const statsPayload = { atk: finalATK, hp: finalHP };
                    const isUnlocked = skin.checkUnlock(statsPayload, currentLevel, reincarnationCount);
                    const isEquipped = activeSkin === skin.id;
                    return (

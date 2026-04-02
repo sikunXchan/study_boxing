@@ -7,7 +7,7 @@ import GuildArea from './components/GuildArea';
 import ShopArea from './components/ShopArea';
 import BattleArea from './components/BattleArea';
 import { useLocalStorage } from './hooks/useLocalStorage';
-import { calculateLevelData } from './utils/level';
+import { calculateLevelData, SKINS } from './utils/level';
 import { runMigration } from './utils/saveMigration';
 
 // Run migration BEFORE any component renders to ensure data integrity
@@ -59,6 +59,25 @@ function App() {
     const timer = setTimeout(() => setIsSaving(false), 1500);
     return () => clearTimeout(timer);
   }, [stats, inventory, equippedItems, resources]);
+
+  // Apply skin theme colors as CSS variables
+  useEffect(() => {
+    const root = document.documentElement;
+    const skinObj = activeSkin ? SKINS.find(s => s.id === activeSkin) : null;
+    
+    if (skinObj && skinObj.theme) {
+      root.style.setProperty('--game-primary', skinObj.theme.primary);
+      root.style.setProperty('--game-primary-rgb', skinObj.theme.primaryRgb);
+      root.style.setProperty('--game-bg', skinObj.theme.bg);
+      root.style.setProperty('--game-neon', skinObj.theme.neon);
+    } else {
+      // Reset to defaults
+      root.style.setProperty('--game-primary', '#10b981');
+      root.style.setProperty('--game-primary-rgb', '16, 185, 129');
+      root.style.setProperty('--game-bg', '#111827');
+      root.style.setProperty('--game-neon', '0 0 10px rgba(16, 185, 129, 0.5), 0 0 20px rgba(16, 185, 129, 0.3)');
+    }
+  }, [activeSkin]);
 
   // Level & Progression Logic
   const previousLevelRef = useRef(null);

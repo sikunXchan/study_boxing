@@ -604,7 +604,7 @@ export default function GuildArea({ resources, stats, setStats, setResources, in
                       onClick={() => handleQuestAction(quest)}
                       className={`w-full mt-4 py-2.5 rounded-lg font-bold text-sm tracking-widest transition-all duration-300 active:scale-[0.98] flex justify-center items-center gap-2
                         ${isActive 
-                          ? 'bg-game-primary/20 text-game-primary border border-game-primary hover:bg-game-primary/30 shadow-[0_0_10px_rgba(16,185,129,0.3)]' 
+                          ? 'bg-game-primary/20 text-game-primary border border-game-primary hover:bg-game-primary/30 shadow-[0_0_10px_rgba(var(--game-primary-rgb),0.3)]' 
                           : 'bg-game-surface border border-game-surface/50 text-white hover:bg-game-surface/80'
                         }`}
                     >
@@ -953,7 +953,7 @@ export default function GuildArea({ resources, stats, setStats, setResources, in
                          <div className="flex gap-2 mt-4">
                             <button 
                               onClick={() => handleHabitEndured(habit.id)}
-                              className="flex-1 py-3 bg-emerald-500/20 border border-emerald-500 text-emerald-400 rounded font-bold text-xs flex justify-center items-center gap-1 active:scale-95 transition-all shadow-[0_0_10px_rgba(16,185,129,0.3)]"
+                              className="flex-1 py-3 bg-emerald-500/20 border border-emerald-500 text-emerald-400 rounded font-bold text-xs flex justify-center items-center gap-1 active:scale-95 transition-all shadow-[0_0_10px_rgba(var(--game-primary-rgb),0.3)]"
                             >
                               <Zap size={14}/> 我慢できた！ (攻撃)
                             </button>

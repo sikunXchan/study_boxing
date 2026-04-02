@@ -204,7 +204,7 @@ export default function BattleArea({ stats, setStats, resources, setResources, i
           <div className={`relative ${isActive ? 'animate-bounce' : ''}`}>
              
              {/* Character Base */}
-             <div className={`w-12 h-12 rounded-full flex items-center justify-center border-2 z-10 shadow-[0_0_15px_rgba(16,185,129,0.5)] 
+             <div className={`w-12 h-12 rounded-full flex items-center justify-center border-2 z-10 shadow-[0_0_15px_rgba(var(--game-primary-rgb),0.5)] 
                ${reincarnationCount > 0 ? 'border-yellow-400 bg-yellow-500/10 shadow-[0_0_15px_rgba(250,204,21,0.5)]' : 'bg-[#111827] border-game-primary'}`}>
                {renderIcon(displayIconName, `!w-[28px] !h-[28px] ${reincarnationCount > 0 ? 'text-yellow-400 drop-shadow-[0_0_8px_rgba(250,204,21,0.8)]' : 'text-game-primary'}`)}
              </div>
@@ -314,7 +314,7 @@ export default function BattleArea({ stats, setStats, resources, setResources, i
       </div>
 
       {/* Timer */}
-      <div className="text-6xl font-black text-game-primary mb-2 tracking-tighter drop-shadow-[0_0_10px_rgba(16,185,129,0.4)]">
+      <div className="text-6xl font-black text-game-primary mb-2 tracking-tighter drop-shadow-[0_0_10px_rgba(var(--game-primary-rgb),0.4)]">
         {formatTime(timeLeft)}
       </div>
 

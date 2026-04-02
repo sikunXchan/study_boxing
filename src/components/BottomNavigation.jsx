@@ -25,7 +25,7 @@ export default function BottomNavigation({ activeTab, setActiveTab }) {
             <div className={`p-2 rounded-2xl transition-all duration-300 ${
               isActive ? 'bg-game-primary/20 shadow-neon scale-110' : 'bg-transparent'
             }`}>
-              <Icon size={isActive ? 28 : 24} className={isActive ? 'drop-shadow-[0_0_8px_rgba(16,185,129,0.8)]' : ''} />
+              <Icon size={isActive ? 28 : 24} style={isActive ? { filter: `drop-shadow(0 0 8px rgba(var(--game-primary-rgb, 16, 185, 129), 0.8))` } : {}} />
             </div>
             <span className={`text-xs font-bold ${isActive ? 'text-game-primary text-shadow-neon' : ''}`}>
               {tab.label}

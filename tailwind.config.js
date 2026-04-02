@@ -8,9 +8,9 @@ export default {
     extend: {
       colors: {
         game: {
-          bg: '#111827',
+          bg: 'var(--game-bg, #111827)',
           surface: '#1f2937',
-          primary: '#10b981', // Neon Green
+          primary: 'var(--game-primary, #10b981)',
           secondary: '#8b5cf6', // Epic Purple
           accent: '#fbbf24', // Legendary Gold
           danger: '#ef4444', // Red
@@ -22,7 +22,7 @@ export default {
         sans: ['Inter', 'Roboto', 'sans-serif'],
       },
       boxShadow: {
-        'neon': '0 0 10px rgba(16, 185, 129, 0.5), 0 0 20px rgba(16, 185, 129, 0.3)',
+        'neon': 'var(--game-neon, 0 0 10px rgba(16, 185, 129, 0.5), 0 0 20px rgba(16, 185, 129, 0.3))',
         'neon-purple': '0 0 10px rgba(139, 92, 246, 0.5), 0 0 20px rgba(139, 92, 246, 0.3)',
       }
     },

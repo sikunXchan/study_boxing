@@ -233,7 +233,7 @@ export default function HomeArea({ stats, setStats, inventory, setInventory, equ
           )}
         </div>
 
-        <div className="flex-1 glass-panel p-3 border-game-primary/30 shadow-[0_0_15px_rgba(16,185,129,0.1)] flex flex-col items-center justify-center relative group">
+        <div className="flex-1 glass-panel p-3 border-game-primary/30 shadow-[0_0_15px_rgba(var(--game-primary-rgb),0.1)] flex flex-col items-center justify-center relative group">
           <span className="text-game-primary text-[10px] font-bold flex items-center gap-1 mb-1 whitespace-nowrap">
             <Activity size={12} /> HP
           </span>
@@ -538,7 +538,7 @@ export default function HomeArea({ stats, setStats, inventory, setInventory, equ
                       <div key={rank.id} className={`relative flex gap-4 p-3 rounded-lg border ${isUnlocked ? 'bg-game-primary/10 border-game-primary/30' : isNext ? 'bg-game-surface border-game-primary/50' : 'bg-transparent border-gray-800'}`}>
                         {/* Node */}
                         <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 border-2 z-10 transition-colors
-                          ${isUnlocked ? 'bg-game-primary border-game-primary text-game-bg shadow-[0_0_10px_rgba(16,185,129,0.5)]' : isNext ? 'bg-[#111827] border-game-primary text-game-primary' : 'bg-[#111827] border-gray-800 text-gray-700'}
+                          ${isUnlocked ? 'bg-game-primary border-game-primary text-game-bg shadow-[0_0_10px_rgba(var(--game-primary-rgb),0.5)]' : isNext ? 'bg-[#111827] border-game-primary text-game-primary' : 'bg-[#111827] border-gray-800 text-gray-700'}
                         `}>
                            {renderIcon(rank.icon, `w-5 h-5 ${!isUnlocked ? 'brightness-0 invert-[0.3] opacity-80 drop-shadow-md' : ''}`)}
                         </div>
@@ -556,7 +556,7 @@ export default function HomeArea({ stats, setStats, inventory, setInventory, equ
                               disabled={!canEvolve}
                               className={`mt-2 w-full py-2 text-xs font-bold rounded flex items-center justify-center gap-1 transition-all ${
                                 canEvolve 
-                                 ? 'bg-game-primary text-black shadow-[0_0_10px_rgba(16,185,129,0.5)] active:scale-95' 
+                                 ? 'bg-game-primary text-black shadow-[0_0_10px_rgba(var(--game-primary-rgb),0.5)] active:scale-95' 
                                  : 'bg-game-surface text-gray-500 disabled:opacity-50'
                               }`}
                             >
@@ -599,7 +599,9 @@ export default function HomeArea({ stats, setStats, inventory, setInventory, equ
                          ${!isUnlocked ? 'opacity-50 grayscale cursor-not-allowed border-dashed' : ''}
                        `}
                      >
-                       {skin.id === 'awakened' && <div className="absolute inset-0 bg-yellow-500/10 pointer-events-none"></div>}
+                       {/* Skin theme color tint */}
+                       {skin.theme && <div className="absolute inset-0 pointer-events-none" style={{ background: `linear-gradient(135deg, ${skin.theme.primary}15 0%, transparent 60%)` }}></div>}
+                       {skin.theme && <div className="absolute bottom-1 left-1 w-2.5 h-2.5 rounded-full border border-white/30 shadow-md" style={{ backgroundColor: skin.theme.primary }}></div>}
                        {renderIcon(skin.icon, `w-6 h-6 ${isEquipped ? 'text-game-accent animate-pulse' : isUnlocked ? 'text-white' : 'text-gray-600'}`)}
                        <span className={`text-[9px] font-bold text-center ${isEquipped ? 'text-game-accent' : isUnlocked ? 'text-gray-300' : 'text-gray-600'}`}>
                          {skin.name}

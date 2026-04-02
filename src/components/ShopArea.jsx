@@ -59,6 +59,14 @@ export default function ShopArea({ resources, setResources, setInventory }) {
     }
   };
 
+  const handleBulkExchange = () => {
+    if (resources.coins >= 2000) {
+      setResources(prev => ({ ...prev, coins: prev.coins - 2000, gems: prev.gems + 1000 }));
+    } else {
+      alert('コインが足りません！ (2000コイン必要です)');
+    }
+  };
+
   const handleBuyAnt = () => {
     if (resources.coins >= 1000) {
       setResources(prev => ({ ...prev, coins: prev.coins - 1000 }));
@@ -295,7 +303,7 @@ export default function ShopArea({ resources, setResources, setInventory }) {
         <h3 className="text-sm font-bold text-game-muted mb-4 flex items-center gap-2">
           <Zap size={16} className="text-gray-400 drop-shadow-[0_0_5px_rgba(156,163,175,0.8)]" /> 取引所
         </h3>
-        <div className="glass-panel p-3 flex items-center justify-between transition-transform duration-200">
+        <div className="glass-panel p-3 flex items-center justify-between transition-transform duration-200 mb-3">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-lg bg-game-bg flex items-center justify-center border border-game-surface shadow-md text-blue-400">
               <Zap size={20} />
@@ -315,6 +323,30 @@ export default function ShopArea({ resources, setResources, setInventory }) {
           >
             <div className="flex items-center gap-1">
               💰 200
+            </div>
+            <ChevronRight size={16} />
+          </button>
+        </div>
+        <div className="glass-panel p-3 flex items-center justify-between transition-transform duration-200 border-game-accent/30 shadow-[0_0_10px_rgba(251,191,36,0.1)]">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-lg bg-game-bg flex items-center justify-center border border-game-accent/50 shadow-md text-game-accent">
+              <Zap size={20} />
+            </div>
+            <div>
+              <h4 className="font-bold text-sm tracking-wide text-game-accent">ジェム大量交換</h4>
+              <span className="text-[10px] text-game-muted block mt-0.5">💎1,000 個と交換</span>
+            </div>
+          </div>
+          <button 
+            onClick={handleBulkExchange}
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg font-bold text-sm transition-all active:scale-95
+              ${resources.coins >= 2000 
+                ? 'bg-game-accent/20 text-game-accent border border-game-accent/50 hover:bg-game-accent/30 shadow-[0_0_10px_rgba(251,191,36,0.3)]' 
+                : 'bg-game-surface text-gray-500 border border-game-surface/50 opacity-50'
+              }`}
+          >
+            <div className="flex items-center gap-1">
+              💰 2,000
             </div>
             <ChevronRight size={16} />
           </button>

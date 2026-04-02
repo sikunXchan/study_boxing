@@ -6,6 +6,7 @@ import HomeArea from './components/HomeArea';
 import GuildArea from './components/GuildArea';
 import ShopArea from './components/ShopArea';
 import BattleArea from './components/BattleArea';
+import SkinParticles from './components/SkinParticles';
 import { useLocalStorage } from './hooks/useLocalStorage';
 import { calculateLevelData, SKINS } from './utils/level';
 import { runMigration } from './utils/saveMigration';
@@ -115,6 +116,7 @@ function App() {
   return (
     <div className="flex flex-col h-screen bg-game-bg text-game-text overflow-hidden relative">
       <TopResourceBar resources={resources} />
+      <SkinParticles activeSkin={activeSkin} />
       
       {/* Main Content Area */}
       <main className="flex-1 overflow-y-auto overflow-x-hidden relative">

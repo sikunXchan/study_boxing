@@ -7,6 +7,35 @@ import { calculateTotalStats } from '../utils/statCalculator';
 // 30 minutes in seconds
 const DEFAULT_TIMER_SECONDS = 30 * 60;
 
+// Victory chime using Web Audio API
+function playVictoryChime() {
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const notes = [
+      { freq: 523.25, start: 0, dur: 0.15 },    // C5
+      { freq: 659.25, start: 0.15, dur: 0.15 },  // E5
+      { freq: 783.99, start: 0.3, dur: 0.15 },   // G5
+      { freq: 1046.50, start: 0.5, dur: 0.4 },   // C6 (sustained)
+    ];
+    notes.forEach(({ freq, start, dur }) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.value = freq;
+      gain.gain.setValueAtTime(0.25, ctx.currentTime + start);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + start + dur);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(ctx.currentTime + start);
+      osc.stop(ctx.currentTime + start + dur + 0.05);
+    });
+    // Close context after playback
+    setTimeout(() => ctx.close(), 2000);
+  } catch (e) {
+    console.warn('[Audio] Victory chime failed:', e);
+  }
+}
+
 export default function BattleArea({ stats, setStats, resources, setResources, inventory, equippedItems, facilities, reincarnationCount, activeSkin, playerRank }) {
   const [timeLeft, setTimeLeft] = useState(DEFAULT_TIMER_SECONDS);
   const [isActive, setIsActive] = useState(false);
@@ -32,7 +61,8 @@ export default function BattleArea({ stats, setStats, resources, setResources, i
   const combatPower = finalATK + finalHP;
 
   // Reward generation formula per second
-  const coinsPerSec = Math.pow(combatPower, 0.15) * 0.15;
+  // Targets: combatPower 10M → ~10,000 coins/30min, 1M → ~2,000 coins/30min
+  const coinsPerSec = Math.pow(combatPower, 0.7) * 0.00007;
   const expPerSec = coinsPerSec / 5;
 
   // Get currently equipped items for visual
@@ -125,6 +155,7 @@ export default function BattleArea({ stats, setStats, resources, setResources, i
 
   const handleComplete = () => {
     setIsActive(false);
+    playVictoryChime();
     const earnedCoins = Math.floor(accumulatedCoins);
     const earnedExp = Math.floor(accumulatedExp);
     distributeRewards(earnedCoins, earnedExp);

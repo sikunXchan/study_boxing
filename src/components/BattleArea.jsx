@@ -61,8 +61,8 @@ export default function BattleArea({ stats, setStats, resources, setResources, i
   const finalHP = Math.floor((stats.hp + bonusHP) * multiplier);
   const combatPower = finalATK + finalHP;
 
-  // Reward generation formula per second - Balanced for study incentives
-  const coinsPerSec = Math.sqrt(finalATK) * 0.001 + 0.5; 
+  // Reward generation formula per second - Optimized for study incentives (Target: ~5 coins/s at 8M ATK)
+  const coinsPerSec = Math.sqrt(finalATK) * 0.0016 + 0.5; 
 
   // Get currently equipped items for visual
   const getEquipped = (type) => inventory.find(i => i.id === equippedItems[type]);

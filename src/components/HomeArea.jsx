@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { User, Activity, Sword, ChevronUp, X, Check, Dog, Sparkles, AlertTriangle, Lock, Unlock } from 'lucide-react';
+import { User, Activity, Sword, ChevronUp, X, Check, Dog, Sparkles, AlertTriangle, Lock, Unlock, Infinity as InfinityIcon } from 'lucide-react';
 import * as LucideIcons from 'lucide-react';
 import { calculateLevelData, calculateMultiplier, AVATAR_RANKS, SKINS } from '../utils/level';
 import { calculateTotalStats } from '../utils/statCalculator';
@@ -294,7 +294,7 @@ export default function HomeArea({ stats, setStats, inventory, setInventory, equ
 
       {/* Equip Modal */}
       {selectedSlot && (
-        <div className="absolute inset-x-0 bottom-0 top-[-64px] z-50 bg-[#111827]/95 backdrop-blur-md flex flex-col animate-in slide-in-from-bottom-8 duration-300">
+        <div className="fixed inset-0 z-[100] bg-[#111827]/95 backdrop-blur-md flex flex-col animate-in slide-in-from-bottom-8 duration-300">
           <div className="p-4 flex justify-between items-center border-b border-game-surface">
             <h2 className="font-bold text-white capitalize">{slotsConfig.find(s => s.type === selectedSlot)?.label} の装備</h2>
             <button onClick={() => setSelectedSlot(null)} className="p-2 text-gray-400 hover:text-white"><X size={20} /></button>
@@ -331,9 +331,6 @@ export default function HomeArea({ stats, setStats, inventory, setInventory, equ
                   if (canEvolve) {
                     const nextRarity = getNextRarity(item.rarity);
                     const isToGod = nextRarity === 'god';
-                    // v10: Guaranteed Evolution Multipliers
-                    // Gear: 1.33x (+33% power jump)
-                    // Pet: 2.5x (Non-God), 4.0x (to God)
                     const statMult = isToGod 
                       ? (item.type === 'pet_entity' ? 4.0 : 1.33) 
                       : (item.type === 'pet_entity' ? 2.5 : 1.33);
@@ -389,13 +386,11 @@ export default function HomeArea({ stats, setStats, inventory, setInventory, equ
                     ${isMaxLevel && !isEquipped ? 'shadow-[0_0_15px_rgba(251,191,36,0.15)] ring-1 ring-game-accent/20' : ''}
                   `}>
                     
-                    {/* Awakened / Collection Flash Effect Background */}
                     {(item.awakened || 0) > 0 && <div className="absolute inset-0 bg-gradient-to-r from-game-accent/10 to-transparent pointer-events-none animate-pulse"></div>}
                     {isMaxLevel && !isEquipped && <div className="absolute inset-0 bg-gradient-to-r from-game-accent/5 to-transparent pointer-events-none"></div>}
 
                      <div className={`w-14 h-14 rounded-lg flex items-center justify-center shrink-0 border relative ${getRarityStyle(item.rarity)}`}>
                        {renderIcon(item.iconName, getIconAccentColor(item.rarity))}
-                       {/* Level Badge in Bottom-Right */}
                        <div className={`absolute -bottom-1 -right-1 bg-[#111827] border border-current text-[8px] font-bold px-1.5 py-0.5 rounded shadow-md
                          ${(item.awakened || 0) > 0 ? 'text-game-accent animate-pulse shadow-[0_0_8px_rgba(251,191,36,0.6)]' : ''}
                        `}>
@@ -411,7 +406,6 @@ export default function HomeArea({ stats, setStats, inventory, setInventory, equ
                         {displayHp > 0 && <span className="text-game-primary font-bold whitespace-nowrap">HP +{displayHp}</span>}
                       </div>
 
-                      {/* Merge Button rendering under stats */}
                       {canMerge && (
                         <button 
                           onClick={handleMerge} 
@@ -432,7 +426,6 @@ export default function HomeArea({ stats, setStats, inventory, setInventory, equ
                         </button>
                       )}
                       
-                      {/* Define flags for render */}
                       {(() => {
                         const isGearCollection = item.type !== 'pet_entity' && ((item.upgradeLevel || 0) >= 4 || (item.awakened || 0) > 0 || item.rarity === 'god');
                         const isPetCollection = item.type === 'pet_entity' && ((item.upgradeLevel || 0) >= 4 || (item.awakened || 0) > 0 || item.rarity === 'god');
@@ -476,9 +469,10 @@ export default function HomeArea({ stats, setStats, inventory, setInventory, equ
           </div>
         </div>
       )}
+
       {/* Avatar Management Modal */}
       {showAvatarModal && (
-        <div className="absolute inset-x-0 bottom-0 top-0 bg-[#0d1424] z-50 flex flex-col animate-in slide-in-from-bottom duration-300">
+        <div className="fixed inset-0 bg-[#0d1424] z-[100] flex flex-col animate-in slide-in-from-bottom duration-300">
            {/* Top Bar */}
            <div className="flex items-center justify-between p-4 bg-game-surface border-b border-game-primary/30 shrink-0">
              <h3 className="font-bold text-lg text-game-primary flex items-center gap-2">
@@ -536,13 +530,11 @@ export default function HomeArea({ stats, setStats, inventory, setInventory, equ
                     const canEvolve = isNext && currentLevel >= rank.reqLevel && finalATK >= rank.reqAtk;
                     return (
                       <div key={rank.id} className={`relative flex gap-4 p-3 rounded-lg border ${isUnlocked ? 'bg-game-primary/10 border-game-primary/30' : isNext ? 'bg-game-surface border-game-primary/50' : 'bg-transparent border-gray-800'}`}>
-                        {/* Node */}
                         <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 border-2 z-10 transition-colors
                           ${isUnlocked ? 'bg-game-primary border-game-primary text-game-bg shadow-[0_0_10px_rgba(var(--game-primary-rgb),0.5)]' : isNext ? 'bg-[#111827] border-game-primary text-game-primary' : 'bg-[#111827] border-gray-800 text-gray-700'}
                         `}>
                            {renderIcon(rank.icon, `w-5 h-5 ${!isUnlocked ? 'brightness-0 invert-[0.3] opacity-80 drop-shadow-md' : ''}`)}
                         </div>
-                        {/* Content */}
                         <div className="flex-1">
                           <h4 className={`font-bold text-sm ${isUnlocked ? 'text-game-primary' : isNext ? 'text-white' : 'text-gray-600'}`}>{rank.name}</h4>
                           {!isUnlocked && idx > 0 && (
@@ -576,7 +568,6 @@ export default function HomeArea({ stats, setStats, inventory, setInventory, equ
                  <span className="w-full h-px bg-game-surface/80 mr-3"></span> 限定スキン <span className="w-full h-px bg-game-surface/80 ml-3"></span>
                </h3>
                <div className="grid grid-cols-2 gap-3">
-                 {/* Revert to default class */}
                  <button 
                    onClick={() => setActiveSkin(null)}
                    className={`glass-panel p-3 flex flex-col items-center justify-center gap-2 border-2 transition-all ${!activeSkin ? 'border-game-primary bg-game-primary/10' : 'border-transparent'}`}
@@ -599,7 +590,6 @@ export default function HomeArea({ stats, setStats, inventory, setInventory, equ
                          ${!isUnlocked ? 'opacity-50 grayscale cursor-not-allowed border-dashed' : ''}
                        `}
                      >
-                       {/* Skin theme color tint */}
                        {skin.theme && <div className="absolute inset-0 pointer-events-none" style={{ background: `linear-gradient(135deg, ${skin.theme.primary}15 0%, transparent 60%)` }}></div>}
                        {skin.theme && <div className="absolute bottom-1 left-1 w-2.5 h-2.5 rounded-full border border-white/30 shadow-md" style={{ backgroundColor: skin.theme.primary }}></div>}
                        {renderIcon(skin.icon, `w-6 h-6 ${isEquipped ? 'text-game-accent animate-pulse' : isUnlocked ? 'text-white' : 'text-gray-600'}`)}

@@ -416,7 +416,7 @@ export default function ShopArea({ resources, setResources, setInventory }) {
 
       {/* Gacha Result Modal - Single Pull */}
       {gachaResult && !isPulling && !isMultiResult && (
-        <div className="absolute inset-x-0 bottom-0 top-[-64px] z-50 bg-[#111827]/96 backdrop-blur-xl flex items-center justify-center flex-col animate-in fade-in duration-300">
+        <div className="fixed inset-0 z-[100] bg-[#111827]/96 backdrop-blur-xl flex items-center justify-center flex-col animate-in fade-in duration-300">
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.05)_0%,transparent_70%)] pointer-events-none"></div>
 
           <h2 className={`text-4xl font-black mb-8 italic tracking-widest animate-in slide-in-from-top-4 duration-500 ${getRarityStyle(gachaResult.rarity)}`}>
@@ -450,7 +450,7 @@ export default function ShopArea({ resources, setResources, setInventory }) {
 
       {/* Gacha Result Modal - 10-Pull */}
       {gachaResult && !isPulling && isMultiResult && Array.isArray(gachaResult) && (
-        <div className="absolute inset-x-0 bottom-0 top-[-64px] z-50 bg-[#111827]/96 backdrop-blur-xl flex flex-col animate-in fade-in duration-300">
+        <div className="fixed inset-0 z-[100] bg-[#111827]/96 backdrop-blur-xl flex flex-col animate-in fade-in duration-300">
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(251,191,36,0.08)_0%,transparent_70%)] pointer-events-none"></div>
           
           <div className="text-center pt-6 pb-3 relative z-10">

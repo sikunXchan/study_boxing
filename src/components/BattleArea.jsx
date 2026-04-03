@@ -213,9 +213,9 @@ export default function BattleArea({ stats, setStats, resources, setResources, i
           setHitEffects(prev => [...prev.slice(-4), newHit]);
 
           // Skin-specific triggered effects
-          if (activeSkinObj?.specialEffect === 'earthquake' && Math.random() > 0.7) {
+          if (activeSkinObj?.specialEffect === 'earthquake' && Math.random() > 0.6) {
             setIsShaking(true);
-            setTimeout(() => setIsShaking(false), 500);
+            setTimeout(() => setIsShaking(false), 300);
           }
           if (activeSkinObj?.specialEffect === 'aura_flare' && Math.random() > 0.8) {
             // handled via class change or CSS
@@ -365,12 +365,14 @@ export default function BattleArea({ stats, setStats, resources, setResources, i
         {hitEffects.map(hit => (
           <div 
             key={hit.id} 
-            className={`absolute font-black text-xs animate-damage-float drop-shadow-md z-20 flex items-center 
-              ${activeSkinObj?.id === 'valkyrie' ? 'text-yellow-400 scale-125' : 
-                activeSkinObj?.id === 'overlord' ? 'text-purple-400 scale-150' : 'text-red-500'}`}
-            style={{ left: `${hit.x}%`, top: `${hit.y}%` }}
+            className={`absolute font-black text-sm lg:text-base animate-damage-float z-50 flex items-center pointer-events-none transition-all
+              ${activeSkinObj?.id === 'valkyrie' ? 'text-yellow-400 drop-shadow-[0_0_8px_rgba(250,204,21,1)] scale-125' : 
+                activeSkinObj?.id === 'behemoth' ? 'text-orange-500 drop-shadow-[0_0_8px_rgba(249,115,22,1)] scale-110' :
+                activeSkinObj?.id === 'overlord' ? 'text-purple-400 drop-shadow-[0_0_10px_rgba(168,85,247,1)] scale-150' : 
+                'text-red-500 drop-shadow-[0_0_5px_rgba(0,0,0,0.8)]'}`}
+            style={{ left: `${hit.x}%`, top: `${hit.y}%`, textShadow: '2px 2px 0px #000' }}
           >
-            {activeSkinObj?.id === 'valkyrie' ? <LucideIcons.Zap size={10} className="mr-0.5" /> : <Zap size={10} className="mr-0.5" />}
+            {activeSkinObj?.id === 'valkyrie' ? <LucideIcons.Zap size={14} className="mr-1 fill-yellow-400" /> : <Zap size={14} className="mr-1" />}
             {hit.damage.toLocaleString()}
           </div>
         ))}

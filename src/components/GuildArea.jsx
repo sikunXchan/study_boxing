@@ -90,8 +90,8 @@ export default function GuildArea({ resources, stats, setStats, setResources, in
   };
   
   const [customQuests, setCustomQuests] = useLocalStorage('gemini_survivor_quests', [
-    { id: 'q1', title: '英単語 100個暗記', type: 'atk', rewardExp: 5000, rewardCoins: 600 },
-    { id: 'q2', title: 'スクワット 30回', type: 'hp', rewardExp: 5000, rewardCoins: 600 },
+    { id: 'q1', title: '英単語 100個暗記', type: 'atk', rewardExp: 150, rewardCoins: 600 },
+    { id: 'q2', title: 'スクワット 30回', type: 'hp', rewardExp: 150, rewardCoins: 600 },
   ]);
 
 
@@ -113,7 +113,7 @@ export default function GuildArea({ resources, stats, setStats, setResources, in
       id: Date.now().toString(),
       title: newQuestTitle,
       type: newQuestReward,
-      rewardExp: 5000, 
+      rewardExp: 150, 
       rewardCoins: 600,
     };
     
@@ -501,7 +501,7 @@ export default function GuildArea({ resources, stats, setStats, setResources, in
                   </label>
                 </div>
                 
-                <p className="text-[10px] text-game-muted mb-3 text-center">完了報酬: EXP +5000 / 💰 600 コイン</p>
+                <p className="text-[10px] text-game-muted mb-3 text-center">完了報酬: EXP +150 / 💰 600 コイン</p>
 
                 <button type="submit" className="w-full bg-game-primary text-[#111827] font-black py-2 rounded flex items-center justify-center gap-1 shadow-neon hover:bg-game-primary/90 transition-all">
                   発行する

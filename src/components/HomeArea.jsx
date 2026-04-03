@@ -56,10 +56,17 @@ export default function HomeArea({ stats, setStats, inventory, setInventory, equ
     if (!item) return '';
     const isAwakened = (item.awakened || 0) > 0;
     
-    // Only awakened items emit an aura (even God rarity)
-    if (!isAwakened) return '';
+    // Awakened items get special flashy auras
+    if (isAwakened) {
+       return item.rarity === 'god' ? 'aura-god-awake' : 'aura-awakened';
+    }
 
+    // Standard GOD rarity aura
     if (item.rarity === 'god') return 'aura-god';
+
+    // Rarity-based auras only for MAX level items
+    const isMax = (item.upgradeLevel || 0) >= 4;
+    if (!isMax) return '';
 
     switch (item.rarity) {
       case 'legendary': return 'aura-legendary';
@@ -161,16 +168,17 @@ export default function HomeArea({ stats, setStats, inventory, setInventory, equ
         {/* Player Avatar */}
         <div className="relative w-32 h-32 group">
           {/* Reincarnation Aura */}
-          {reincarnationCount > 0 && (
-            <div className="absolute inset-0 bg-yellow-500/30 rounded-full blur-2xl animate-pulse"></div>
+          {(reincarnationCount > 0 || activeSkin === 'awakened') && (
+            <div className={`absolute inset-0 rounded-full blur-2xl animate-pulse ${activeSkin === 'awakened' ? 'bg-yellow-400/50 scale-125' : 'bg-yellow-500/30'}`}></div>
           )}
           <div className="absolute inset-0 bg-game-primary/20 rounded-full blur-xl animate-pulse"></div>
           <div className={`relative w-full h-full rounded-full border-4 shadow-neon flex items-center justify-center overflow-hidden bg-gradient-to-b from-game-surface to-[#111827] 
-            ${reincarnationCount > 0 ? 'border-yellow-400' : 'border-game-primary'}`}>
-            {renderIcon(displayIconName, `!w-[70px] !h-[70px] ${reincarnationCount > 0 ? 'text-yellow-400 drop-shadow-[0_0_10px_rgba(250,204,21,0.8)]' : 'text-game-primary'}`)}
+            ${activeSkin === 'awakened' ? 'border-yellow-400 animate-pulse ring-8 ring-yellow-400/30' : reincarnationCount > 0 ? 'border-yellow-400' : 'border-game-primary'}`}>
+            {activeSkin === 'awakened' && <div className="absolute inset-0 bg-yellow-400/10 animate-ping pointer-events-none"></div>}
+            {renderIcon(displayIconName, `!w-[70px] !h-[70px] ${activeSkin === 'awakened' ? 'text-yellow-400 drop-shadow-[0_0_15px_rgba(250,204,21,1)]' : reincarnationCount > 0 ? 'text-yellow-400 drop-shadow-[0_0_10px_rgba(250,204,21,0.8)]' : 'text-game-primary'}`)}
           </div>
           <div className={`absolute -bottom-4 left-1/2 transform -translate-x-1/2 bg-game-bg border px-4 py-1 rounded-full text-xs font-bold shadow-neon whitespace-nowrap flex items-center gap-1
-            ${reincarnationCount > 0 ? 'border-yellow-400 text-yellow-400' : 'border-game-primary text-game-primary'}`}>
+            ${activeSkin === 'awakened' ? 'border-yellow-400 text-yellow-400 shadow-[0_0_10px_rgba(250,204,21,0.5)]' : reincarnationCount > 0 ? 'border-yellow-400 text-yellow-400' : 'border-game-primary text-game-primary'}`}>
             <ChevronUp size={14} /> Lv.{currentLevel} {displayName}
           </div>
         </div>
@@ -224,7 +232,7 @@ export default function HomeArea({ stats, setStats, inventory, setInventory, equ
           </span>
           <div className="flex flex-col items-center">
             <span className="text-2xl font-black text-white">{finalATK.toLocaleString()}</span>
-            <span className="text-[9px] text-gray-400 font-bold mt-1">({stats.atk + bonusATK} x {multiplier.toFixed(2)})</span>
+            <span className="text-[9px] text-gray-400 font-bold mt-1">({stats.atk + bonusATK} x {((finalATK / Math.max(1, stats.atk + bonusATK)) || 1.00).toFixed(2)})</span>
           </div>
           {rawPassiveATK > 0 && (
             <div className="absolute -top-6 bg-game-surface border border-game-muted/30 px-2 py-0.5 rounded text-[8px] opacity-0 group-hover:opacity-100 transition-opacity">
@@ -239,7 +247,7 @@ export default function HomeArea({ stats, setStats, inventory, setInventory, equ
           </span>
           <div className="flex flex-col items-center">
             <span className="text-2xl font-black text-white">{finalHP.toLocaleString()}</span>
-            <span className="text-[9px] text-gray-400 font-bold mt-1">({stats.hp + bonusHP} x {multiplier.toFixed(2)})</span>
+            <span className="text-[9px] text-gray-400 font-bold mt-1">({stats.hp + bonusHP} x {((finalHP / Math.max(1, stats.hp + bonusHP)) || 1.00).toFixed(2)})</span>
           </div>
           {rawPassiveHP > 0 && (
             <div className="absolute -top-6 bg-game-surface border border-game-muted/30 px-2 py-0.5 rounded text-[8px] opacity-0 group-hover:opacity-100 transition-opacity">

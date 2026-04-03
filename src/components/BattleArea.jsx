@@ -276,12 +276,13 @@ export default function BattleArea({ stats, setStats, resources, setResources, i
           <div className={`relative ${isActive ? 'animate-bounce' : ''}`}>
              
              {/* Character Base */}
-             <div className={`w-12 h-12 rounded-full flex items-center justify-center border-2 z-10 shadow-[0_0_15px_rgba(var(--game-primary-rgb),0.5)] 
-               ${reincarnationCount > 0 ? 'border-yellow-400 bg-yellow-500/10 shadow-[0_0_15px_rgba(250,204,21,0.5)]' : 'bg-[#111827] border-game-primary'}
-               ${enemyHitEffect ? 'animate-wiggle bg-red-900/40 border-red-500' : ''}
-               ${activeSkinObj?.id === 'overlord' ? 'shadow-[0_0_25px_rgba(168,85,247,0.8)] border-purple-500' : ''}`}>
-               {renderIcon(displayIconName, `!w-[28px] !h-[28px] ${activeSkinObj?.id === 'overlord' ? 'text-purple-400 drop-shadow-[0_0_15px_rgba(168,85,247,1)]' : reincarnationCount > 0 ? 'text-yellow-400 drop-shadow-[0_0_8px_rgba(250,204,21,0.8)]' : 'text-game-primary'}`)}
-             </div>
+              <div className={`w-12 h-12 rounded-full flex items-center justify-center border-2 z-10 shadow-[0_0_15px_rgba(var(--game-primary-rgb),0.5)] 
+                ${activeSkin === 'awakened' ? 'border-yellow-400 bg-yellow-500/10 shadow-[0_0_25px_rgba(250,204,21,1)] animate-pulse ring-4 ring-yellow-400/30' : reincarnationCount > 0 ? 'border-yellow-400 bg-yellow-500/10 shadow-[0_0_15px_rgba(250,204,21,0.5)]' : 'bg-[#111827] border-game-primary'}
+                ${enemyHitEffect ? 'animate-wiggle bg-red-900/40 border-red-500' : ''}
+                ${activeSkinObj?.id === 'overlord' ? 'shadow-[0_0_25px_rgba(168,85,247,0.8)] border-purple-500' : ''}`}>
+                {activeSkin === 'awakened' && <div className="absolute inset-0 bg-yellow-400/20 animate-ping rounded-full pointer-events-none"></div>}
+                {renderIcon(displayIconName, `!w-[28px] !h-[28px] ${activeSkin === 'awakened' ? 'text-yellow-400 drop-shadow-[0_0_15px_rgba(250,204,21,1)]' : reincarnationCount > 0 ? 'text-yellow-400 drop-shadow-[0_0_8px_rgba(250,204,21,0.8)]' : 'text-game-primary'}`)}
+              </div>
 
              {/* Armor (Back/Body) overlay */}
              {equippedArmor && (
@@ -382,7 +383,8 @@ export default function BattleArea({ stats, setStats, resources, setResources, i
           <div 
             key={hit.id} 
             className={`absolute font-black text-sm lg:text-base animate-damage-float z-50 flex items-center pointer-events-none transition-all
-              ${activeSkinObj?.id === 'valkyrie' ? 'text-yellow-400 drop-shadow-[0_0_8px_rgba(250,204,21,1)] scale-125' : 
+              ${activeSkin === 'awakened' ? 'text-yellow-400 drop-shadow-[0_0_12px_rgba(250,204,21,1)] scale-125' : 
+                activeSkinObj?.id === 'valkyrie' ? 'text-yellow-400 drop-shadow-[0_0_8px_rgba(250,204,21,1)] scale-125' : 
                 activeSkinObj?.id === 'behemoth' ? 'text-orange-500 drop-shadow-[0_0_8px_rgba(249,115,22,1)] scale-110' :
                 activeSkinObj?.id === 'overlord' ? 'text-purple-400 drop-shadow-[0_0_10px_rgba(168,85,247,1)] scale-150' : 
                 'text-red-500 drop-shadow-[0_0_5px_rgba(0,0,0,0.8)]'}`}

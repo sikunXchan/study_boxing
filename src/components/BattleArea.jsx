@@ -45,6 +45,7 @@ export default function BattleArea({ stats, setStats, resources, setResources, i
   const [enemyHitEffect, setEnemyHitEffect] = useState(false);
   const [isShaking, setIsShaking] = useState(false);
   const wakeLockRef = useRef(null);
+  const hitIdCounter = useRef(0);
 
   // Compute stats
   const { bonusATK, bonusHP, activePet } = useMemo(() => calculateTotalStats(inventory, equippedItems, facilities, reincarnationCount), [equippedItems, inventory, facilities, reincarnationCount]);
@@ -61,7 +62,7 @@ export default function BattleArea({ stats, setStats, resources, setResources, i
   const combatPower = finalATK + finalHP;
 
   // Reward generation formula per second - Decided only from Total ATK
-  const coinsPerSec = Math.pow(finalATK, 0.70) * 0.0001;
+  const coinsPerSec = Math.pow(finalATK, 0.70) * 0.05 + 1; // Minimum 1 coin/sec + scaling
 
   // Get currently equipped items for visual
   const getEquipped = (type) => inventory.find(i => i.id === equippedItems[type]);
@@ -177,28 +178,30 @@ export default function BattleArea({ stats, setStats, resources, setResources, i
 
   useEffect(() => {
     let interval = null;
-    if (isActive && timeLeft > 0) {
+    if (isActive) {
+      let elapsed = 0;
       interval = setInterval(() => {
-        setTimeLeft(time => time - 1);
+        elapsed++;
+        setTimeLeft(prev => {
+          if (prev <= 1) {
+            handleComplete();
+            return 0;
+          }
+          return prev - 1;
+        });
+        
         setAccumulatedCoins(c => c + coinsPerSec);
 
         // Enemy Attack every 4 seconds
-        if (timeLeft % 4 === 0 && timeLeft !== DEFAULT_TIMER_SECONDS) {
+        if (elapsed % 4 === 0) {
           const lossBase = 5;
-          // Damage scales with ATK, reduced by HP
-          // Higher ATK + Lower HP = Significant loss
           const ratio = finalATK / Math.max(1, finalHP);
-          const actualLoss = Math.floor(lossBase * Math.min(20, ratio)); // Cap at 20x loss
+          const actualLoss = Math.floor(lossBase * Math.min(20, ratio));
           
           if (actualLoss > 0) {
             setAccumulatedCoins(prev => Math.max(0, prev - actualLoss));
             setEnemyHitEffect(true);
             setTimeout(() => setEnemyHitEffect(false), 400);
-
-            // Overlord or Behemoth might have screen effects on being hit too
-            if (activeSkinObj?.id === 'overlord') {
-               // dim screen logic in render
-            }
           }
         }
 
@@ -217,17 +220,11 @@ export default function BattleArea({ stats, setStats, resources, setResources, i
             setIsShaking(true);
             setTimeout(() => setIsShaking(false), 300);
           }
-          if (activeSkinObj?.specialEffect === 'aura_flare' && Math.random() > 0.8) {
-            // handled via class change or CSS
-          }
         }
       }, 1000);
-    } else if (timeLeft === 0 && isActive) {
-      handleComplete();
-      clearInterval(interval);
     }
     return () => clearInterval(interval);
-  }, [isActive, timeLeft, coinsPerSec, finalATK, finalHP, activeSkinObj]);
+  }, [isActive, coinsPerSec, finalATK, finalHP, activeSkinObj]);
 
   return (
     <div className="p-4 flex flex-col items-center h-full animate-in fade-in duration-300 relative">

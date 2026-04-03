@@ -51,5 +51,13 @@ export const SKINS = [
   { id: 'cyberpunk', name: 'サイバーパンク', condition: '総レベル100以上', icon: 'Cpu', checkUnlock: (stats, level) => level >= 100,
     theme: { primary: '#e879f9', primaryRgb: '232, 121, 249', neon: '0 0 10px rgba(232,121,249,0.5), 0 0 20px rgba(232,121,249,0.3)', bg: '#1a0a1e' } },
   { id: 'awakened', name: '覚醒者 (Awakened)', condition: '転生1回以上', icon: 'Infinity', checkUnlock: (stats, level, reincarnations) => reincarnations >= 1,
-    theme: { primary: '#facc15', primaryRgb: '250, 204, 21', neon: '0 0 10px rgba(250,204,21,0.5), 0 0 20px rgba(250,204,21,0.3)', bg: '#1a1505' } }
+    theme: { primary: '#facc15', primaryRgb: '250, 204, 21', neon: '0 0 10px rgba(250,204,21,0.5), 0 0 20px rgba(250,204,21,0.3)', bg: '#1a1505' } },
+  { id: 'valkyrie', name: 'ヴァルキリー', condition: '総ATK 1000万以上', icon: 'Zap', checkUnlock: (stats) => stats.atk >= 10000000, specialEffect: 'gold_strike',
+    theme: { primary: '#fde047', primaryRgb: '253, 224, 71', neon: '0 0 15px rgba(253,224,71,0.6)', bg: '#1e1b03' } },
+  { id: 'behemoth', name: 'ベヒーモス', condition: '総HP 1000万以上', icon: 'ShieldAlert', checkUnlock: (stats) => stats.hp >= 10000000, specialEffect: 'earthquake',
+    theme: { primary: '#ef4444', primaryRgb: '239, 68, 68', neon: '0 0 15px rgba(239,68,68,0.6)', bg: '#1e0303' } },
+  { id: 'demigod', name: '半神 (Demigod)', condition: '総合 3000万以上', icon: 'Sun', checkUnlock: (stats) => (stats.atk + stats.hp) >= 30000000, specialEffect: 'aura_flare',
+    theme: { primary: '#38bdf8', primaryRgb: '56, 189, 248', neon: '0 0 20px rgba(56,189,248,0.7)', bg: '#081a2e' } },
+  { id: 'overlord', name: 'オーバーロード', condition: '総合 5000万以上', icon: 'Skull', checkUnlock: (stats) => (stats.atk + stats.hp) >= 50000000, specialEffect: 'void_burst',
+    theme: { primary: '#a855f7', primaryRgb: '168, 85, 247', neon: '0 0 25px rgba(168,85,247,0.8)', bg: '#0f051a' } }
 ];

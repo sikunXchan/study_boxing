@@ -145,7 +145,7 @@ export default function HomeArea({ stats, setStats, inventory, setInventory, equ
   const activeModalItems = inventory.filter(item => item.type === selectedSlot);
 
   return (
-    <div className="p-4 flex flex-col items-center h-full space-y-6 animate-in fade-in zoom-in duration-300 relative">
+    <div className="p-4 flex flex-col items-center space-y-6 animate-in fade-in zoom-in duration-300 relative">
       
       {/* Avatar Management Button */}
       <button 
@@ -250,7 +250,7 @@ export default function HomeArea({ stats, setStats, inventory, setInventory, equ
       </div>
 
       {/* Equipment Slots Grid */}
-      <div className="w-full max-w-sm flex-1 pb-24 overflow-y-auto custom-scrollbar">
+      <div className="w-full max-w-sm pb-24">
         <h3 className="text-sm font-bold text-game-muted mb-4 flex items-center">
           <span className="w-full h-px bg-game-surface/80 mr-3"></span>
           EQUIPMENT & PET

@@ -170,7 +170,7 @@ export default function ShopArea({ resources, setResources, setInventory }) {
   };
 
   return (
-    <div className="p-4 h-full flex flex-col space-y-8 animate-in slide-in-from-left duration-300 relative">
+    <div className="p-4 flex flex-col space-y-8 animate-in slide-in-from-left duration-300 relative">
       <h2 className="text-xl font-black italic tracking-wider filter drop-shadow-[0_0_8px_rgba(251,191,36,0.8)] pt-2 text-[#fbbf24]">
         REWARD SHOP
       </h2>
@@ -262,7 +262,7 @@ export default function ShopArea({ resources, setResources, setInventory }) {
       </div>
 
       {/* SNS Time Shop & Exchange */}
-      <div className="flex-1 overflow-y-auto pb-20 custom-scrollbar pr-1">
+      <div className="pb-20 pr-1">
         <h3 className="text-sm font-bold text-game-muted mb-4 flex items-center gap-2">
           <Zap size={16} className="text-game-primary drop-shadow-[0_0_5px_rgba(16,185,129,0.8)]" /> スタミナ（SNS）購入
         </h3>

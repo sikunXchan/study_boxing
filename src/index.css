@@ -366,11 +366,29 @@
     transform: translateY(75vh) translateX(calc(var(--sway-x) * 0.3)) rotate(calc(var(--spin-deg) * 2.0)) scale(1.15);
   }
   100% {
-    transform: translateY(110vh) translateX(calc(var(--sway-x) * 0.8)) rotate(calc(var(--spin-deg) * 2.5)) scale(0.4);
+  transform: translateY(110vh) translateX(calc(var(--sway-x) * 0.8)) rotate(calc(var(--spin-deg) * 2.5)) scale(0.4);
     opacity: 0;
   }
 }
 
 .animate-skin-particle-fall {
   animation: skin-particle-fall var(--fall-duration, 6s) ease-in var(--fall-delay, 0s) forwards;
+}
+
+@keyframes shake {
+  0%, 100% { transform: translate(0, 0); }
+  25% { transform: translate(-4px, -2px); }
+  50% { transform: translate(4px, 2px); }
+  75% { transform: translate(-2px, 4px); }
+}
+.animate-shake {
+  animation: shake 0.15s ease-in-out infinite;
+}
+
+@keyframes wiggle {
+  0%, 100% { transform: rotate(-8deg); }
+  50% { transform: rotate(8deg); }
+}
+.animate-wiggle {
+  animation: wiggle 0.2s ease-in-out infinite;
 }

@@ -42,7 +42,8 @@ export default function BattleArea({ stats, setStats, resources, setResources, i
   const [accumulatedCoins, setAccumulatedCoins] = useState(0);
   const [hitEffects, setHitEffects] = useState([]);
   const [rewardResult, setRewardResult] = useState(null); // { type: 'complete' | 'retreat', coins: number }
-  const hitIdCounter = useRef(0);
+  const [enemyHitEffect, setEnemyHitEffect] = useState(false);
+  const [isShaking, setIsShaking] = useState(false);
   const wakeLockRef = useRef(null);
 
   // Compute stats
@@ -59,9 +60,8 @@ export default function BattleArea({ stats, setStats, resources, setResources, i
   const finalHP = Math.floor((stats.hp + bonusHP) * multiplier);
   const combatPower = finalATK + finalHP;
 
-  // Reward generation formula per second
-  // Targets: combatPower 10M → ~10,000 coins/30min, 1M → ~2,000 coins/30min
-  const coinsPerSec = Math.pow(combatPower, 0.7) * 0.00007;
+  // Reward generation formula per second - Decided only from Total ATK
+  const coinsPerSec = Math.pow(finalATK, 0.70) * 0.0001;
 
   // Get currently equipped items for visual
   const getEquipped = (type) => inventory.find(i => i.id === equippedItems[type]);
@@ -182,15 +182,44 @@ export default function BattleArea({ stats, setStats, resources, setResources, i
         setTimeLeft(time => time - 1);
         setAccumulatedCoins(c => c + coinsPerSec);
 
-        // Visual hit effect
+        // Enemy Attack every 4 seconds
+        if (timeLeft % 4 === 0 && timeLeft !== DEFAULT_TIMER_SECONDS) {
+          const lossBase = 5;
+          // Damage scales with ATK, reduced by HP
+          // Higher ATK + Lower HP = Significant loss
+          const ratio = finalATK / Math.max(1, finalHP);
+          const actualLoss = Math.floor(lossBase * Math.min(20, ratio)); // Cap at 20x loss
+          
+          if (actualLoss > 0) {
+            setAccumulatedCoins(prev => Math.max(0, prev - actualLoss));
+            setEnemyHitEffect(true);
+            setTimeout(() => setEnemyHitEffect(false), 400);
+
+            // Overlord or Behemoth might have screen effects on being hit too
+            if (activeSkinObj?.id === 'overlord') {
+               // dim screen logic in render
+            }
+          }
+        }
+
+        // Visual player hit effect (Damage reflects ATK)
         if (Math.random() > 0.4) {
           const newHit = {
             id: hitIdCounter.current++,
-            x: 60 + Math.random() * 30,
-            y: 30 + Math.random() * 40,
-            damage: Math.floor(combatPower * (0.8 + Math.random() * 0.4))
+            x: 55 + Math.random() * 35,
+            y: 25 + Math.random() * 45,
+            damage: Math.floor(finalATK * (0.95 + Math.random() * 0.1))
           };
           setHitEffects(prev => [...prev.slice(-4), newHit]);
+
+          // Skin-specific triggered effects
+          if (activeSkinObj?.specialEffect === 'earthquake' && Math.random() > 0.7) {
+            setIsShaking(true);
+            setTimeout(() => setIsShaking(false), 500);
+          }
+          if (activeSkinObj?.specialEffect === 'aura_flare' && Math.random() > 0.8) {
+            // handled via class change or CSS
+          }
         }
       }, 1000);
     } else if (timeLeft === 0 && isActive) {
@@ -198,7 +227,7 @@ export default function BattleArea({ stats, setStats, resources, setResources, i
       clearInterval(interval);
     }
     return () => clearInterval(interval);
-  }, [isActive, timeLeft, coinsPerSec, combatPower]);
+  }, [isActive, timeLeft, coinsPerSec, finalATK, finalHP, activeSkinObj]);
 
   return (
     <div className="p-4 flex flex-col items-center h-full animate-in fade-in duration-300 relative">
@@ -210,10 +239,21 @@ export default function BattleArea({ stats, setStats, resources, setResources, i
       </p>
 
       {/* Battle Scene */}
-      <div className="w-full max-w-sm h-48 bg-gray-900 border-2 border-game-surface rounded-xl mb-8 relative overflow-hidden shadow-[0_0_20px_rgba(0,0,0,0.5)]">
+      <div className={`w-full max-w-sm h-48 bg-gray-900 border-2 border-game-surface rounded-xl mb-8 relative overflow-hidden shadow-[0_0_20px_rgba(0,0,0,0.5)] transition-all duration-300 ${isShaking ? 'animate-shake' : ''} ${enemyHitEffect ? 'ring-4 ring-red-500/50' : ''}`}>
         {/* Background elements */}
-        <div className="absolute inset-0 opacity-20 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI4IiBoZWlnaHQ9IjgiPgo8cmVjdCB3aWR0aD0iOCIgaGVpZ2h0PSI4IiBmaWxsPSIjMWYyOTM3Ij48L3JlY3Q+CjxwYXRoIGQ9Ik0wLDBMODwsOFpNOCwwTDAsOFoiIHN0cm9rZT0iIzM3NDE1MSIgc3Ryb2tlLXdpZHRoPSIxIj48L3BhdGg+Cjwvc3ZnPg==')]"></div>
-        <div className="absolute bottom-0 w-full h-1/3 bg-gradient-to-t from-black to-transparent"></div>
+        <div className={`absolute inset-0 opacity-20 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI4IiBoZWlnaHQ9IjgiPgo8cmVjdCB3aWR0aD0iOCIgaGVpZ2h0PSI4IiBmaWxsPSIjMWYyOTM3Ij48L3JlY3Q+CjxwYXRoIGQ9Ik0wLDBMODwsOFpNOCwwTDAsOFoiIHN0cm9rZT0iIzM3NDE1MSIgc3Ryb2tlLXdpZHRoPSIxIj48L3BhdGg+Cjwvc3ZnPg==')] ${activeSkinObj?.id === 'overlord' ? 'invert sepia saturate-200 hue-rotate-[240deg]' : ''}`}></div>
+        <div className={`absolute bottom-0 w-full h-1/3 bg-gradient-to-t from-black to-transparent ${activeSkinObj?.id === 'demigod' ? 'from-sky-900/50' : ''}`}></div>
+
+        {/* Special Aura Effects for Limited Skins */}
+        {isActive && activeSkinObj?.specialEffect === 'aura_flare' && (
+          <div className="absolute inset-0 bg-sky-400/5 animate-pulse flex items-center justify-center">
+            <div className="w-full h-full border-4 border-sky-400/20 rounded-full animate-ping opacity-20"></div>
+          </div>
+        )}
+        
+        {isActive && activeSkinObj?.id === 'overlord' && (
+          <div className="absolute inset-0 bg-purple-900/10 mix-blend-overlay"></div>
+        )}
 
         {/* Player Character Container */}
         <div className="absolute left-8 bottom-8 flex flex-col items-center">
@@ -221,8 +261,10 @@ export default function BattleArea({ stats, setStats, resources, setResources, i
              
              {/* Character Base */}
              <div className={`w-12 h-12 rounded-full flex items-center justify-center border-2 z-10 shadow-[0_0_15px_rgba(var(--game-primary-rgb),0.5)] 
-               ${reincarnationCount > 0 ? 'border-yellow-400 bg-yellow-500/10 shadow-[0_0_15px_rgba(250,204,21,0.5)]' : 'bg-[#111827] border-game-primary'}`}>
-               {renderIcon(displayIconName, `!w-[28px] !h-[28px] ${reincarnationCount > 0 ? 'text-yellow-400 drop-shadow-[0_0_8px_rgba(250,204,21,0.8)]' : 'text-game-primary'}`)}
+               ${reincarnationCount > 0 ? 'border-yellow-400 bg-yellow-500/10 shadow-[0_0_15px_rgba(250,204,21,0.5)]' : 'bg-[#111827] border-game-primary'}
+               ${enemyHitEffect ? 'animate-wiggle bg-red-900/40 border-red-500' : ''}
+               ${activeSkinObj?.id === 'overlord' ? 'shadow-[0_0_25px_rgba(168,85,247,0.8)] border-purple-500' : ''}`}>
+               {renderIcon(displayIconName, `!w-[28px] !h-[28px] ${activeSkinObj?.id === 'overlord' ? 'text-purple-400 drop-shadow-[0_0_15px_rgba(168,85,247,1)]' : reincarnationCount > 0 ? 'text-yellow-400 drop-shadow-[0_0_8px_rgba(250,204,21,0.8)]' : 'text-game-primary'}`)}
              </div>
 
              {/* Armor (Back/Body) overlay */}
@@ -304,9 +346,18 @@ export default function BattleArea({ stats, setStats, resources, setResources, i
 
         {/* Enemies (only when active) */}
         {isActive && (
-          <div className="absolute right-4 bottom-8 flex gap-4 animate-slide-left opacity-80">
-            <Ghost className="text-red-400" size={32} />
-            <Skull className="text-purple-400" size={28} />
+          <div className={`absolute right-4 bottom-8 flex gap-4 animate-slide-left opacity-80 ${enemyHitEffect ? 'scale-125 transition-transform translate-x-[-20px]' : ''}`}>
+            <Ghost className={`${activeSkinObj?.id === 'overlord' ? 'text-blue-200' : 'text-red-400'}`} size={32} />
+            <Skull className={`${activeSkinObj?.id === 'overlord' ? 'text-purple-300' : 'text-purple-400'}`} size={28} />
+          </div>
+        )}
+
+        {/* Enemy Coin-Steal Alert */}
+        {enemyHitEffect && (
+          <div className="absolute left-8 top-12 z-50 flex flex-col items-center animate-bounce">
+            <div className="bg-red-600 text-white text-[10px] font-black px-2 py-0.5 rounded shadow-lg flex items-center gap-1">
+              <AlertTriangle size={12} /> COIN LOSS!
+            </div>
           </div>
         )}
 
@@ -314,10 +365,13 @@ export default function BattleArea({ stats, setStats, resources, setResources, i
         {hitEffects.map(hit => (
           <div 
             key={hit.id} 
-            className="absolute text-red-500 font-black text-xs animate-damage-float drop-shadow-md z-20 flex items-center"
+            className={`absolute font-black text-xs animate-damage-float drop-shadow-md z-20 flex items-center 
+              ${activeSkinObj?.id === 'valkyrie' ? 'text-yellow-400 scale-125' : 
+                activeSkinObj?.id === 'overlord' ? 'text-purple-400 scale-150' : 'text-red-500'}`}
             style={{ left: `${hit.x}%`, top: `${hit.y}%` }}
           >
-            <Zap size={10} className="mr-0.5" />{hit.damage.toLocaleString()}
+            {activeSkinObj?.id === 'valkyrie' ? <LucideIcons.Zap size={10} className="mr-0.5" /> : <Zap size={10} className="mr-0.5" />}
+            {hit.damage.toLocaleString()}
           </div>
         ))}
         

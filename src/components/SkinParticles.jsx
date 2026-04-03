@@ -4,23 +4,34 @@ import * as LucideIcons from 'lucide-react';
 const SKIN_THEMES = {
   beach_boy: {
     icons: ['Umbrella', 'Sun', 'Waves', 'Anchor', 'Ship', 'Fish'],
-    colors: ['#06b6d4', '#0891b2', '#22d3ee', '#7dd3fc', '#bae6fd']
+    colors: ['#06b6d4', '#0891b2', '#22d3ee', '#7dd3fc', '#bae6fd'],
+    interval: 250,
+    maxParticles: 40
   },
   halloween_pumpkin: {
     icons: ['Ghost', 'Moon', 'Skull', 'Candy', 'Cat', 'Graveyard'],
-    colors: ['#f97316', '#fb923c', '#c026d3', '#8b5cf6', '#4c1d95']
+    colors: ['#f97316', '#fb923c', '#c026d3', '#8b5cf6', '#4c1d95'],
+    interval: 250,
+    maxParticles: 40
   },
   cyberpunk: {
     icons: ['Cpu', 'Zap', 'Hash', 'Terminal', 'Database', 'Activity'],
-    colors: ['#e879f9', '#d946ef', '#22d3ee', '#10b981', '#f43f5e']
+    colors: ['#e879f9', '#d946ef', '#22d3ee', '#10b981', '#f43f5e'],
+    interval: 250,
+    maxParticles: 40
   },
   awakened: {
     icons: ['Infinity', 'Crown', 'Star', 'Sparkles', 'Trophy', 'Medal'],
-    colors: ['#facc15', '#fde047', '#fbbf24', '#fef9c3', '#ffffff']
+    colors: ['#facc15', '#fde047', '#fbbf24', '#fef9c3', '#ffffff'],
+    interval: 80, // Much faster for Awakened
+    maxParticles: 80, // More particles
+    glow: 'radial-gradient(circle, rgba(250,204,21,0.15) 0%, transparent 70%)'
   },
   default: {
     icons: ['Star', 'Heart', 'Gem', 'Sparkles', 'Zap', 'Crown'],
-    colors: ['#f43f5e', '#f97316', '#eab308', '#22c55e', '#3b82f6', '#8b5cf6', '#ec4899']
+    colors: ['#f43f5e', '#f97316', '#eab308', '#22c55e', '#3b82f6', '#8b5cf6', '#ec4899'],
+    interval: 250,
+    maxParticles: 40
   }
 };
 
@@ -53,13 +64,13 @@ export default function SkinParticles({ activeSkin }) {
 
       setParticles(prev => {
         const updated = [...prev, newParticle];
-        // Increased max particles for "flashier" effect
-        if (updated.length > 40) {
-          return updated.slice(-40);
+        const max = theme.maxParticles || 40;
+        if (updated.length > max) {
+          return updated.slice(-max);
         }
         return updated;
       });
-    }, 250);
+    }, theme.interval || 250);
 
     // Cleanup dead particles periodically
     const cleanupInterval = setInterval(() => {
@@ -72,10 +83,16 @@ export default function SkinParticles({ activeSkin }) {
     };
   }, [activeSkin]);
 
-  if (!activeSkin || particles.length === 0) return null;
+  if (!activeSkin || (particles.length === 0 && !theme.glow)) return null;
 
   return (
     <div className="fixed inset-0 z-[90] pointer-events-none overflow-hidden">
+      {theme.glow && (
+        <div 
+          className="absolute inset-0 animate-pulse duration-[3000ms]" 
+          style={{ background: theme.glow }}
+        ></div>
+      )}
       {particles.map(particle => {
         const IconComp = LucideIcons[particle.icon] || LucideIcons.Star;
         return (

@@ -8,9 +8,9 @@ import { calculateTotalStats } from '../utils/statCalculator';
 const DEFAULT_TIMER_SECONDS = 30 * 60;
 
 // Victory chime using Web Audio API
-function playVictoryChime() {
+function playVictoryChime(ctx) {
+  if (!ctx) return;
   try {
-    const ctx = new (window.AudioContext || window.webkitAudioContext)();
     const notes = [
       { freq: 523.25, start: 0, dur: 0.15 },    // C5
       { freq: 659.25, start: 0.15, dur: 0.15 },  // E5
@@ -46,6 +46,13 @@ export default function BattleArea({ stats, setStats, resources, setResources, i
   const [isShaking, setIsShaking] = useState(false);
   const wakeLockRef = useRef(null);
   const hitIdCounter = useRef(0);
+  const accumulatedCoinsRef = useRef(0);
+  const audioContextRef = useRef(null);
+
+  // Sync ref with state to solve stale closure issues in handleComplete
+  useEffect(() => {
+    accumulatedCoinsRef.current = accumulatedCoins;
+  }, [accumulatedCoins]);
 
   // Compute stats
   const { bonusATK, bonusHP, activePet } = useMemo(() => calculateTotalStats(inventory, equippedItems, facilities, reincarnationCount), [equippedItems, inventory, facilities, reincarnationCount]);
@@ -92,7 +99,19 @@ export default function BattleArea({ stats, setStats, resources, setResources, i
     return <IconComponent className={className} size={32} />;
   };
 
-  const handleStart = () => {
+  const handleStart = async () => {
+    // Warm up/Resume AudioContext on user gesture
+    try {
+      if (!audioContextRef.current) {
+        audioContextRef.current = new (window.AudioContext || window.webkitAudioContext)();
+      }
+      if (audioContextRef.current.state === 'suspended') {
+        await audioContextRef.current.resume();
+      }
+    } catch (e) {
+      console.warn('[Audio] Failed to warm up context:', e);
+    }
+
     setIsActive(true);
   };
 
@@ -153,8 +172,8 @@ export default function BattleArea({ stats, setStats, resources, setResources, i
 
   const handleComplete = () => {
     setIsActive(false);
-    playVictoryChime();
-    const earnedCoins = Math.floor(accumulatedCoins);
+    playVictoryChime(audioContextRef.current);
+    const earnedCoins = Math.floor(accumulatedCoinsRef.current);
     distributeRewards(earnedCoins);
     setRewardResult({ type: 'complete', coins: earnedCoins });
   };

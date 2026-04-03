@@ -83,7 +83,8 @@ export default function SkinParticles({ activeSkin }) {
     };
   }, [activeSkin]);
 
-  if (!activeSkin || (particles.length === 0 && !theme.glow)) return null;
+  const theme = activeSkin ? (SKIN_THEMES[activeSkin] || SKIN_THEMES.default) : null;
+  if (!activeSkin || !theme || (particles.length === 0 && !theme.glow)) return null;
 
   return (
     <div className="fixed inset-0 z-[90] pointer-events-none overflow-hidden">
